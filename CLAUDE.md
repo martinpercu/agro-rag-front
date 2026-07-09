@@ -51,6 +51,26 @@ El layout 2-col es CSS Grid:
 
 El composer (input) esta fixed al bottom con `position: fixed; bottom: 0`.
 
+## Si moviste el repo o cambio el path absoluto
+
+Si el path del repo cambia (ej. `mv agroposta-web/ /otro/lugar/` o `git clone` en otra maquina), Turbopack entra en loop de panics "Next.js package not found" porque `node_modules` y `.next` tienen paths absolutos hardcodeados.
+
+Sintoma: localhost:3002 se recarga en loop infinito y el log muestra:
+```
+FATAL: Failed to write app endpoint /page
+Caused by: Next.js package not found
+```
+
+**Fix:**
+```bash
+cd agroposta-web
+rm -rf node_modules .next
+npm install
+npm run dev
+```
+
+Aplicar SIEMPRE despues de cualquier move, rename, o fresh clone.
+
 ## Rate limit del backend
 
 El backend tiene rate limit de OpenAI (200K TPM en tier default). Si ves muchas cards con ❌ y "Rate limit reached", es el backend que se quedó sin budget. Soluciones: esperar 1 min, upgrade de tier, o menos preguntas seguidas en el report.
