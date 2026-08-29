@@ -1,76 +1,156 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { ComparePanel } from "./components/ComparePanel";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { StrategyCard, type CardState } from "./components/StrategyCard";
 
-type Source = {
-  pagina: number;
-  seccion: string;
-  cultivo?: string | null;
-  campana?: string | null;
-  tipo: string;
-  score: number;
+type Lang = "es" | "en";
+
+const TEXTS: Record<Lang, Record<string, string>> = {
+  es: {
+    title: "Agroposta",
+    subtitle: "Comparador RAG · 7 estrategias lado a lado · Edición 2026/05",
+    limpiar: "Limpiar",
+    placeholder: "Hacele una pregunta a todas las estrategias...",
+    enviar: "Enviar",
+    procesando: "Procesando...",
+    errorConexion: "Error de conexión",
+    errorRed: "Error de red",
+    kMin: "Máxima precisión",
+    kMax: "Máxima cobertura",
+  },
+  en: {
+    title: "Agroposta",
+    subtitle: "RAG Comparator · 7 strategies side by side · Issue 2026/05",
+    limpiar: "Clear",
+    placeholder: "Ask a question to all strategies...",
+    enviar: "Send",
+    procesando: "Processing...",
+    errorConexion: "Connection error",
+    errorRed: "Network error",
+    kMin: "Maximum precision",
+    kMax: "Maximum coverage",
+  },
 };
 
-type Message = {
-  role: "user" | "assistant";
-  content: string;
-  intent?: string;
-  sources?: Source[];
-};
+const STRATEGIES = [
+  "baseline",
+  "lexical",
+  "hybrid",
+  "rerank",
+  "query_rewrite",
+  "multi_query",
+  "hyde",
+] as const;
 
-const SUGGESTIONS = [
-  "Cuanto me sale sembrar soja de primera en zona norte?",
-  "Que se proyecta para trigo en la campana 2026/27?",
-  "Cual es el margen bruto del maiz tardio?",
-  "Cuanto cuesta un kilo de novillo en feedlot?",
-];
+type StrategyName = (typeof STRATEGIES)[number];
+
+type HistoryItem = { role: "user" | "assistant"; content: string };
+
+function makeInitialState(): Record<StrategyName, CardState> {
+  const s = {} as Record<StrategyName, CardState>;
+  for (const name of STRATEGIES) {
+    s[name] = { status: "idle", answer: "", sources: [] };
+  }
+  return s;
+}
+
+function makeInitialHistories(): Record<StrategyName, HistoryItem[]> {
+  const h = {} as Record<StrategyName, HistoryItem[]>;
+  for (const name of STRATEGIES) {
+    h[name] = [];
+  }
+  return h;
+}
+
+const BACKEND = "http://127.0.0.1:8002";
 
 export default function Home() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [lang, setLang] = useState<Lang>("es");
+  const [states, setStates] = useState<Record<StrategyName, CardState>>(makeInitialState);
+  const [histories, setHistories] = useState<Record<StrategyName, HistoryItem[]>>(makeInitialHistories);
+  const [enabled, setEnabled] = useState<Record<StrategyName, boolean>>(() => {
+    const e = {} as Record<StrategyName, boolean>;
+    for (const name of STRATEGIES) e[name] = name === "baseline";
+    return e;
+  });
+  const [k, setK] = useState(6);
+  const [temperature, setTemperature] = useState(0.2);
+  const [semBm25, setSemBm25] = useState(20);
+  const [lexBm25, setLexBm25] = useState(20);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [compareQuestion, setCompareQuestion] = useState<string | null>(null);
-  const [compareHistory, setCompareHistory] = useState<
-    { role: string; content: string }[]
-  >([]);
-  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const busyRef = useRef(false);
+  const t = TEXTS[lang];
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({
-      top: scrollRef.current.scrollHeight,
-      behavior: "smooth",
-    });
-  }, [messages, busy]);
+    const saved = localStorage.getItem("agroposta_lang");
+    if (saved === "en" || saved === "es") setLang(saved);
+  }, []);
+
+  function toggleLang() {
+    const next: Lang = lang === "es" ? "en" : "es";
+    setLang(next);
+    localStorage.setItem("agroposta_lang", next);
+  }
+
+  const resetStates = useCallback(() => {
+    setStates(makeInitialState());
+  }, []);
 
   async function send(question: string) {
-    if (!question.trim() || busy) return;
+    if (!question.trim() || busyRef.current) return;
 
-    // Disparar el comparador en paralelo (con la pregunta actual + history)
-    const newHistory = [
-      ...messages.map((m) => ({ role: m.role, content: m.content })),
-      { role: "user", content: question },
-    ];
-    setCompareQuestion(question);
-    setCompareHistory(newHistory);
+    const enabledNames = STRATEGIES.filter((n) => enabled[n]);
+    if (enabledNames.length === 0) return;
 
-    // Chat normal
-    setMessages((m) => [...m, { role: "user", content: question }]);
-    setInput("");
+    busyRef.current = true;
     setBusy(true);
+    setInput("");
+
+    setHistories((prev) => {
+      const next = { ...prev };
+      for (const name of enabledNames) {
+        next[name] = [...(prev[name] || []), { role: "user" as const, content: question }];
+      }
+      return next;
+    });
+
+    setStates((prev) => {
+      const next = { ...prev };
+      for (const name of enabledNames) {
+        next[name] = { status: "retrieving", answer: "", sources: [] };
+      }
+      return next;
+    });
+
+    const abortController = new AbortController();
 
     try {
-      const res = await fetch("/api/proxy/chat/stream", {
+      const res = await fetch(`${BACKEND}/compare/stream`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question, session_id: sessionId }),
+        body: JSON.stringify({
+          question,
+          enabled: enabledNames,
+          lang,
+          k,
+          sem_bm25: semBm25,
+          lex_bm25: lexBm25,
+          temperature,
+        }),
+        signal: abortController.signal,
       });
+
       if (!res.ok || !res.body) {
-        setMessages((m) => [
-          ...m,
-          { role: "assistant", content: "Error conectando con el agente." },
-        ]);
+        setStates((prev) => {
+          const next = { ...prev };
+          for (const name of enabledNames) {
+            next[name] = { status: "error", answer: "", sources: [], error: t.errorConexion };
+          }
+          return next;
+        });
+        busyRef.current = false;
         setBusy(false);
         return;
       }
@@ -78,9 +158,6 @@ export default function Home() {
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
-      let agentText = "";
-      let agentIntent = "";
-      let agentSources: Source[] = [];
 
       while (true) {
         const { value, done } = await reader.read();
@@ -97,179 +174,232 @@ export default function Home() {
             const data = line.slice(5).trim();
             try {
               const payload = JSON.parse(data);
-              if (currentEvent === "meta" && payload.session_id) {
-                setSessionId(payload.session_id);
-                agentIntent = payload.intent;
-              } else if (currentEvent === "sources" && payload.sources) {
-                agentSources = payload.sources;
-              } else if (currentEvent === "token" && payload.text) {
-                agentText += payload.text;
-                setMessages((m) => {
-                  const copy = [...m];
-                  const last = copy[copy.length - 1];
-                  if (last && last.role === "assistant" && !last.intent) {
-                    copy[copy.length - 1] = { ...last, content: agentText };
-                  } else {
-                    copy.push({ role: "assistant", content: agentText });
-                  }
-                  return copy;
+              const sName = payload.strategy as StrategyName;
+
+              if (currentEvent === "strategy_retrieve") {
+                setStates((prev) => ({
+                  ...prev,
+                  [sName]: {
+                    status: "streaming",
+                    intent: payload.intent,
+                    answer: "",
+                    sources: payload.sources || [],
+                    trace: payload.trace || [],
+                    retrievalMs: payload.retrieval_ms,
+                    numSources: payload.num_sources,
+                    distinctSources: payload.distinct_sources,
+                  },
+                }));
+              } else if (currentEvent === "strategy_token") {
+                setStates((prev) => {
+                  const cur = prev[sName];
+                  if (!cur || cur.status !== "streaming") return prev;
+                  return {
+                    ...prev,
+                    [sName]: { ...cur, answer: cur.answer + payload.text },
+                  };
                 });
+              } else if (currentEvent === "strategy_done") {
+                setStates((prev) => {
+                  const cur = prev[sName];
+                  return {
+                    ...prev,
+                    [sName]: {
+                      status: "done",
+                      intent: cur?.intent,
+                      answer: payload.answer || cur?.answer || "",
+                      sources: payload.sources || cur?.sources || [],
+                      trace: cur?.trace || [],
+                      answererMs: payload.answerer_ms,
+                      inputTokens: payload.input_tokens,
+                      outputTokens: payload.output_tokens,
+                      retrievalMs: cur?.retrievalMs,
+                      numSources: cur?.numSources,
+                      distinctSources: cur?.distinctSources,
+                    },
+                  };
+                });
+                setHistories((prev) => {
+                  const next = { ...prev };
+                  next[sName] = [
+                    ...(prev[sName] || []),
+                    { role: "assistant", content: payload.answer || "" },
+                  ];
+                  return next;
+                });
+              } else if (currentEvent === "strategy_error") {
+                setStates((prev) => ({
+                  ...prev,
+                  [sName]: {
+                    status: "error",
+                    answer: "",
+                    sources: [],
+                    error: payload.error || "Error desconocido",
+                  },
+                }));
               }
             } catch {}
           }
         }
       }
-      setMessages((m) => {
-        const copy = [...m];
-        const last = copy[copy.length - 1];
-        if (last && last.role === "assistant") {
-          copy[copy.length - 1] = {
-            ...last,
-            intent: agentIntent,
-            sources: agentSources,
-          };
-        }
-        return copy;
-      });
     } catch (e) {
-      setMessages((m) => [
-        ...m,
-        { role: "assistant", content: "Error de red." },
-      ]);
+      if ((e as Error).name === "AbortError") return;
+      setStates((prev) => {
+        const next = { ...prev };
+        for (const name of enabledNames) {
+          next[name] = { status: "error", answer: "", sources: [], error: t.errorRed };
+        }
+        return next;
+      });
     }
+
+    busyRef.current = false;
     setBusy(false);
   }
 
-  async function downloadPdf() {
-    if (!sessionId) return;
-    const res = await fetch("/api/proxy/export-pdf", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ session_id: sessionId }),
-    });
-    if (!res.ok) return;
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `agroposta_${sessionId.slice(0, 8)}.pdf`;
-    a.click();
-    URL.revokeObjectURL(url);
+  function toggleStrategy(name: StrategyName) {
+    setEnabled((prev) => ({ ...prev, [name]: !prev[name] }));
+  }
+
+  function clearHistories() {
+    setHistories(makeInitialHistories());
+    resetStates();
   }
 
   return (
-    <div className="layout">
-      <main className="chat-pane">
-        <header className="header">
-          <div>
-            <h1>Agroposta</h1>
-            <div className="subtitle">
-              Consejero agropecuario sobre Margenes Agropecuarios · Edicion
-              2026/05
+    <div className="layout-grid">
+      <header className="grid-header">
+        <div>
+          <h1>{t.title}</h1>
+          <div className="subtitle">{t.subtitle}</div>
+        </div>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <button className="lang-toggle" onClick={toggleLang}>
+            {lang === "es" ? "🇺🇸 EN" : "🇪🇸 ES"}
+          </button>
+          <button className="download-btn" onClick={clearHistories} disabled={busy}>
+            {t.limpiar}
+          </button>
+        </div>
+      </header>
+
+      <div className="grid-3x2">
+        {STRATEGIES.map((name) => (
+          <StrategyCard
+            key={name}
+            name={name}
+            lang={lang}
+            enabled={enabled[name]}
+            onToggle={() => toggleStrategy(name)}
+            state={states[name]}
+            history={histories[name] || []}
+            isStreaming={states[name].status === "streaming" || states[name].status === "retrieving"}
+          />
+        ))}
+      </div>
+
+      <form
+        className="composer"
+        onSubmit={(e) => {
+          e.preventDefault();
+          send(input);
+        }}
+      >
+        <div className="k-row">
+          <div className="k-control temp-control">
+            <span className="k-label">T°</span>
+            <span className="k-value">{temperature.toFixed(1)}</span>
+            <div className="k-slider-wrap">
+              <span className="k-min">0</span>
+              <input
+                type="range"
+                className="k-slider"
+                min={0}
+                max={1}
+                step={0.1}
+                value={temperature}
+                onChange={(e) => setTemperature(Number(e.target.value))}
+                style={{ "--k-pct": `${temperature * 100}%` } as React.CSSProperties}
+              />
+              <span className="k-max">1</span>
             </div>
           </div>
-          <button
-            className="download-btn"
-            onClick={downloadPdf}
-            disabled={!sessionId}
+          <div
+            className="k-desc"
+            style={{ visibility: k !== 1 ? "hidden" : "visible" }}
           >
-            Descargar PDF
-          </button>
-        </header>
-
-        <div ref={scrollRef} className="chat-scroll">
-          {messages.length === 0 && (
-            <div className="empty">
-              <p>
-                Hola, soy Agroposta. Preguntame sobre costos, margenes,
-                precios o lo que necesites de la revista.
-              </p>
-              <div style={{ marginTop: 20 }}>
-                {SUGGESTIONS.map((s, i) => (
-                  <button
-                    key={i}
-                    className="download-btn"
-                    style={{
-                      background: "var(--accent-soft)",
-                      color: "var(--accent)",
-                      margin: 4,
-                    }}
-                    onClick={() => send(s)}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
+            {t.kMin}
+          </div>
+          <div className="k-control">
+            <span className="k-label">K</span>
+            <span className="k-value">{k}</span>
+            <div className="k-slider-wrap">
+              <span className="k-min">1</span>
+              <input
+                type="range"
+                className="k-slider"
+                min={1}
+                max={16}
+                value={k}
+                onChange={(e) => setK(Number(e.target.value))}
+                style={{ "--k-pct": `${((k - 1) / 15) * 100}%` } as React.CSSProperties}
+              />
+              <span className="k-max">16</span>
             </div>
-          )}
-
-          {messages.map((m, i) => (
-            <div key={i} className={`message ${m.role}`}>
-              <div className="role">
-                {m.role === "user" ? "Productor" : "Agroposta"}
-              </div>
-              {m.intent && <div className="intent-badge">{m.intent}</div>}
-              <div>{m.content}</div>
-              {m.sources && m.sources.length > 0 && (
-                <div className="sources">
-                  Fuentes citadas en la revista:
-                  <ul>
-                    {m.sources.map((s, j) => (
-                      <li key={j}>
-                        pag. {s.pagina} · seccion {s.seccion}
-                        {s.cultivo ? ` · ${s.cultivo}` : ""}
-                        {s.campana
-                          ? ` · campana ${s.campana.replace("_", "/")}`
-                          : ""}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          ))}
-
-          {busy && (
-            <div className="message agent">
-              <div className="role">Agroposta</div>
-              <span className="thinking">Pensando</span>
-            </div>
-          )}
+          </div>
+          <div
+            className="k-desc"
+            style={{ visibility: k !== 16 ? "hidden" : "visible" }}
+          >
+            {t.kMax}
+          </div>
+          <div className="branch-inputs">
+            <label className="branch-field">
+              <span>Sem-BM25</span>
+              <input
+                type="number"
+                min={1}
+                max={40}
+                value={semBm25}
+                onChange={(e) =>
+                  setSemBm25(Math.min(40, Math.max(1, Number(e.target.value) || 20)))
+                }
+              />
+            </label>
+            <label className="branch-field">
+              <span>Lex-BM25</span>
+              <input
+                type="number"
+                min={1}
+                max={40}
+                value={lexBm25}
+                onChange={(e) =>
+                  setLexBm25(Math.min(40, Math.max(1, Number(e.target.value) || 20)))
+                }
+              />
+            </label>
+          </div>
         </div>
 
-        <form
-          className="composer"
-          onSubmit={(e) => {
-            e.preventDefault();
-            send(input);
-          }}
-        >
-          <div className="composer-inner">
-            <textarea
-              rows={2}
-              placeholder="Preguntale a Agroposta..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  send(input);
-                }
-              }}
-              disabled={busy}
-            />
-            <button type="submit" disabled={busy || !input.trim()}>
-              Enviar
-            </button>
-          </div>
-        </form>
-      </main>
-
-      <ComparePanel
-        question={compareQuestion}
-        history={compareHistory}
-        k={6}
-      />
+        <div className="composer-inner">
+          <textarea
+            rows={2}
+            placeholder={t.placeholder}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                send(input);
+              }
+            }}
+            disabled={busy}
+          />
+          <button type="submit" disabled={busy || !input.trim()}>
+            {busy ? t.procesando : t.enviar}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
