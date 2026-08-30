@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { StrategyCard, type CardState } from "./components/StrategyCard";
+import { supabase, isSupabaseConfigured } from "./lib/supabase";
 
 type Lang = "es" | "en";
 
@@ -77,6 +78,7 @@ export default function Home() {
   const [lexBm25, setLexBm25] = useState(20);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   const busyRef = useRef(false);
   const t = TEXTS[lang];
@@ -84,6 +86,13 @@ export default function Home() {
   useEffect(() => {
     const saved = localStorage.getItem("agroposta_lang");
     if (saved === "en" || saved === "es") setLang(saved);
+    if (isSupabaseConfigured() && supabase) {
+      supabase.auth.getSession().then(({ data }) => {
+        setUserEmail(data.session?.user?.email ?? null);
+      });
+      const { data: sub } = supabase.auth.onAuthStateChange((_e, sess) => setUserEmail(sess?.user?.email ?? null));
+      return () => sub.subscription.unsubscribe();
+    }
   }, []);
 
   function toggleLang() {
@@ -124,10 +133,17 @@ export default function Home() {
 
     const abortController = new AbortController();
 
+    // Optional Supabase JWT — backend /me etc require it, compare/stream still open (Phase 0)
+    let authHeader: Record<string, string> = {};
+    if (isSupabaseConfigured() && supabase) {
+      const { data } = await supabase.auth.getSession();
+      if (data.session?.access_token) authHeader = { Authorization: `Bearer ${data.session.access_token}` };
+    }
+
     try {
       const res = await fetch(`/api/proxy/compare/stream`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeader },
         body: JSON.stringify({
           question,
           enabled: enabledNames,
@@ -272,6 +288,26 @@ export default function Home() {
           <div className="subtitle">{t.subtitle}</div>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {isSupabaseConfigured() ? (
+            userEmail ? (
+              <>
+                <span style={{ fontSize: 12, opacity: 0.7 }}>{userEmail}</span>
+                <button
+                  className="lang-toggle"
+                  onClick={async () => {
+                    if (supabase) await supabase.auth.signOut();
+                    setUserEmail(null);
+                  }}
+                >
+                  Salir
+                </button>
+              </>
+            ) : (
+              <a href="/login" className="lang-toggle" style={{ textDecoration: "none" }}>
+                Entrar
+              </a>
+            )
+          ) : null}
           <button className="lang-toggle" onClick={toggleLang}>
             {lang === "es" ? "🇺🇸 EN" : "🇪🇸 ES"}
           </button>
