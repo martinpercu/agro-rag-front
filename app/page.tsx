@@ -62,8 +62,6 @@ function makeInitialHistories(): Record<StrategyName, HistoryItem[]> {
   return h;
 }
 
-const BACKEND = "http://127.0.0.1:8002";
-
 export default function Home() {
   const [lang, setLang] = useState<Lang>("es");
   const [states, setStates] = useState<Record<StrategyName, CardState>>(makeInitialState);
@@ -127,7 +125,7 @@ export default function Home() {
     const abortController = new AbortController();
 
     try {
-      const res = await fetch(`${BACKEND}/compare/stream`, {
+      const res = await fetch(`/api/proxy/compare/stream`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
