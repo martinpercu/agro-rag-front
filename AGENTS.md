@@ -2,17 +2,17 @@
 
 ## Que es este repo
 
-Frontend de Agroposta: chat con comparador de RAG lado a lado. La pantalla tiene 2 columnas — chat a la izquierda, comparador de 6 strategies a la derecha.
+Frontend de Agroposta: comparador de 7 strategies RAG con streaming. La pantalla tiene grilla 3×2 (+1) con toggles ON/OFF por strategy.
 
-Stack: Next.js 16.2.9 + React 19.2.7 + Tailwind v4 + TypeScript 5.9.3.
+Stack: Next.js 16.2.9 + React 19.2.7 + Tailwind v4 + TypeScript 5.9.3. Deploy en Vercel `https://agro-rag-front.vercel.app`.
 
 ## Estructura clave
 
-- `app/page.tsx`: layout 2-col (chat izq + comparador der)
-- `app/components/ComparePanel.tsx`: 6 cards con estado per-card (idle/running/done/error)
-- `app/globals.css`: `@import "tailwindcss"` + estilos custom del compare panel
-- `next.config.js`: rewrites `/api/proxy/*` -> `${process.env.BACKEND_URL || "http://127.0.0.1:8002"}/:path*` (Railway en prod, `127.0.0.1:8002` en dev)
-- `app/page.tsx`: usa `fetch("/api/proxy/compare/stream")` relativo (evita CORS + mixed-content)
+- `app/page.tsx`: 7 strategies (`baseline`, `lexical`, `hybrid`, `rerank`, `query_rewrite`, `multi_query`, `hyde`) — cada una con `StrategyCard` (streaming SSE). Usa `fetch("/api/proxy/compare/stream")` relativo (evita CORS + mixed-content)
+- `app/components/StrategyCard.tsx`: card principal (streaming) — estados `idle`/`retrieving`/`streaming`/`done`/`error`, toggle ON/OFF, historial por strategy, métricas + fuentes + trace expandible
+- `app/components/ComparePanel.tsx`: legacy 6 cards non-stream (`POST /api/proxy/compare`) — mantener solo para referencia
+- `app/globals.css`: `@import "tailwindcss"` + estilos custom del compare panel / strategy cards
+- `next.config.js`: rewrites `/api/proxy/*` -> `${process.env.BACKEND_URL || "http://127.0.0.1:8002"}/:path*` (Railway `https://agro-back-production.up.railway.app` en prod, `127.0.0.1:8002` en dev)
 
 ## Comandos utiles
 
@@ -35,13 +35,15 @@ cd ../agro-rag-back && uv run uvicorn api.main:app --port 8002 --app-dir src
 
 ## Si vas a tocar el comparador
 
-El componente `app/components/ComparePanel.tsx` hace `POST /api/proxy/compare` cuando el user envia una pregunta. Muestra 6 cards con estado per-card:
-- `idle`: "Sin consulta"
-- `running`: spinner + border pulse
-- `done`: answer + métricas + botón "Ver fuentes" (expande hasta 4 sources)
-- `error`: ❌ con el mensaje de OpenAI (rate limit, etc)
+El flujo actual es streaming via `app/page.tsx` + `app/components/StrategyCard.tsx`:
 
-Las 6 strategies se ejecutan en el backend en paralelo (asyncio.gather) y devuelven sus métricas. El `extra` field del response tiene metadata por strategy.
+- `app/page.tsx` junta `enabled` (toggles), `k`, `temperature`, `sem_bm25`/`lex_bm25`, `lang` y hace `POST /api/proxy/compare/stream` (SSE `strategy_retrieve` / `strategy_token` / `strategy_done` / `strategy_error`).
+- `StrategyCard` muestra por strategy: `idle` ("Esperando una consulta...") → `retrieving` (spinner "Buscando información...") → `streaming` (tokens + `▌`) → `done` (answer + métricas `⏱ 📄 🎟` + "Ver fuentes" + "Ver trace") / `error` (❌ mensaje OpenAI).
+- Cada card tiene toggle ON/OFF; `enabled` filtra qué strategies corren (default solo `baseline`).
+
+Legacy: `app/components/ComparePanel.tsx` hace `POST /api/proxy/compare` non-stream con 6 cards (`idle`/`running`/`done`/`error`). No tocar salvo para referencia.
+
+Las strategies se ejecutan en el backend en paralelo (`asyncio.gather` + `run_compare_stream`) y el `extra` field trae metadata (retrieval timings, trace). Las 6 del comparador default son `baseline`, `hybrid`, `rerank`, `query_rewrite`, `multi_query`, `hyde`; `lexical` y `rerank_ce` son extra (`get_extra_strategies`).
 
 ## Si vas a tocar el layout
 
