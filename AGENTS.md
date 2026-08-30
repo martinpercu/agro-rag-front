@@ -1,4 +1,4 @@
-# CLAUDE.md (frontend)
+# AGENTS.md (frontend)
 
 ## Que es este repo
 
@@ -11,7 +11,8 @@ Stack: Next.js 16.2.9 + React 19.2.7 + Tailwind v4 + TypeScript 5.9.3.
 - `app/page.tsx`: layout 2-col (chat izq + comparador der)
 - `app/components/ComparePanel.tsx`: 6 cards con estado per-card (idle/running/done/error)
 - `app/globals.css`: `@import "tailwindcss"` + estilos custom del compare panel
-- `next.config.js`: rewrites `/api/proxy/*` -> `http://127.0.0.1:8002` (el backend)
+- `next.config.js`: rewrites `/api/proxy/*` -> `${process.env.BACKEND_URL || "http://127.0.0.1:8002"}/:path*` (Railway en prod, `127.0.0.1:8002` en dev)
+- `app/page.tsx`: usa `fetch("/api/proxy/compare/stream")` relativo (evita CORS + mixed-content)
 
 ## Comandos utiles
 
@@ -22,7 +23,7 @@ npm run build              # production build
 npm run start              # production server
 
 # El backend tiene que estar corriendo en :8002:
-cd ../agro-back && uv run uvicorn api.main:app --port 8002 --app-dir src
+cd ../agro-rag-back && uv run uvicorn api.main:app --port 8002 --app-dir src
 ```
 
 ## Convenciones
@@ -53,7 +54,7 @@ El composer (input) esta fixed al bottom con `position: fixed; bottom: 0`.
 
 ## Si moviste el repo o cambio el path absoluto
 
-Si el path del repo cambia (ej. `mv agroposta-web/ /otro/lugar/` o `git clone` en otra maquina), Turbopack entra en loop de panics "Next.js package not found" porque `node_modules` y `.next` tienen paths absolutos hardcodeados.
+Si el path del repo cambia (ej. `mv agro-rag-front/ /otro/lugar/` o `git clone` en otra maquina), Turbopack entra en loop de panics "Next.js package not found" porque `node_modules` y `.next` tienen paths absolutos hardcodeados.
 
 Sintoma: localhost:3002 se recarga en loop infinito y el log muestra:
 ```
@@ -63,7 +64,7 @@ Caused by: Next.js package not found
 
 **Fix:**
 ```bash
-cd agroposta-web
+cd agro-rag-front
 rm -rf node_modules .next
 npm install
 npm run dev

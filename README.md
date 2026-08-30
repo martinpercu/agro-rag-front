@@ -13,15 +13,16 @@ Frontend de Agroposta: chat con comparador de RAG lado a lado.
 ## Estructura
 
 ```
-agroposta-web/
+agro-rag-front/
 ├── app/
 │   ├── layout.tsx                 (root layout)
-│   ├── page.tsx                   (chat + comparador, 2 columnas)
+│   ├── page.tsx                   (chat + comparador, 2 columnas, fetch /api/proxy/compare/stream)
 │   ├── globals.css                (Tailwind v4 + estilos custom)
 │   └── components/
-│       └── ComparePanel.tsx       (6 cards del comparador)
+│       ├── StrategyCard.tsx       (7 cards streaming)
+│       └── ComparePanel.tsx       (6 cards legacy non-stream)
 ├── package.json
-├── next.config.js                 (rewrites /api/proxy/* -> :8002)
+├── next.config.js                 (rewrites /api/proxy/* -> BACKEND_URL)
 ├── postcss.config.mjs             (@tailwindcss/postcss)
 ├── tsconfig.json
 └── next-env.d.ts
@@ -38,7 +39,7 @@ npm run dev
 # -> http://localhost:3002
 ```
 
-El backend (`../agro-back/`) tiene que estar corriendo en `:8002` para que el proxy funcione.
+El backend (`../agro-rag-back/` en local, `https://agro-back-production.up.railway.app` en prod vía `BACKEND_URL`) tiene que estar corriendo para que el proxy funcione.
 
 ## Componentes
 
@@ -58,10 +59,10 @@ En pantallas `<1100px` de ancho, el panel se apila debajo del chat.
 ## Convenciones
 
 - **Puerto**: 3002
-- **API backend**: `http://127.0.0.1:8002` (proxy via `next.config.js`)
-- **No commitear**: `node_modules/`, `.next/`, `out/`, `*.tsbuildinfo`
+- **API backend**: `${process.env.BACKEND_URL || "http://127.0.0.1:8002"}` proxyeado vía `next.config.js` → `/api/proxy/*` (Railway `https://agro-back-production.up.railway.app` en prod)
+- **No commitear**: `node_modules/`, `.next/`, `out/`, `*.tsbuildinfo`, `.env*`
 - **Tailwind v4**: se configura via `@import "tailwindcss"` en `globals.css`, no hay `tailwind.config.js`
 
-## Ver el CLAUDE.md
+## Ver el AGENTS.md
 
-`cat CLAUDE.md` para contexto adicional sobre el proyecto.
+`cat AGENTS.md` para contexto adicional sobre el proyecto.
