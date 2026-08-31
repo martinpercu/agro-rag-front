@@ -2,17 +2,22 @@
 
 ## Que es este repo
 
-Frontend de Agroposta: comparador de 7 strategies RAG con streaming. La pantalla tiene grilla 3×2 (+1) con toggles ON/OFF por strategy.
+Frontend de Agroposta: **producto** chat GPT-like + **lab** `/dev` con 7 strategies RAG.
 
-Stack: Next.js 16.2.9 + React 19.2.7 + Tailwind v4 + TypeScript 5.9.3. Deploy en Vercel `https://agro-rag-front.vercel.app`.
+- **Producto** (`/`): Odoo-like — left sidebar (logo, `Mis investigadas/planes`, user), center chat (human right bubble / agent left), right panel finito con 2 iconos `pin` + `campana` (colapsado, expande a investigadas pinneadas). Stack Next.js 16.2.9 + React 19.2.7 + Tailwind v4, Vercel `https://agro-rag-front.vercel.app`. Chat usa **solo `baseline` (Semantic) en prod** — lo dejo anotado: no cambiar hasta que avises “PROD con usuarios” (decisión de tier). Valores `k/temperature/sem_bm25/lex_bm25` los toma de lo que dejes en `/dev` (no UI en producto).
+- **Lab** (`/dev`): abierto, sin gate — `app/(dev)/dev/page.tsx` con grilla 3×2 (+1) 7 strategies + toggles, para investigar RAG. No se muestra al usuario final.
+
+Stack base: Next.js 16.2.9 + React 19.2.7 + Tailwind v4 + TypeScript 5.9.3.
 
 ## Estructura clave
 
-- `app/page.tsx`: 7 strategies (`baseline`, `lexical`, `hybrid`, `rerank`, `query_rewrite`, `multi_query`, `hyde`) — cada una con `StrategyCard` (streaming SSE). Usa `fetch("/api/proxy/compare/stream")` relativo (evita CORS + mixed-content)
-- `app/components/StrategyCard.tsx`: card principal (streaming) — estados `idle`/`retrieving`/`streaming`/`done`/`error`, toggle ON/OFF, historial por strategy, métricas + fuentes + trace expandible
-- `app/components/ComparePanel.tsx`: legacy 6 cards non-stream (`POST /api/proxy/compare`) — mantener solo para referencia
-- `app/globals.css`: `@import "tailwindcss"` + estilos custom del compare panel / strategy cards
-- `next.config.js`: rewrites `/api/proxy/*` -> `${process.env.BACKEND_URL || "http://127.0.0.1:8002"}/:path*` (Railway `https://agro-back-production.up.railway.app` en prod, `127.0.0.1:8002` en dev)
+- `app/(dev)/dev/page.tsx`: lab `/dev` — 7 strategies (`baseline`, `lexical`, `hybrid`, `rerank`, `query_rewrite`, `multi_query`, `hyde`) con `StrategyCard` (streaming SSE). Abierto, sin auth gate. `fetch("/api/proxy/compare/stream")` relativo.
+- `app/(dashboard)/layout.tsx` + `app/(dashboard)/page.tsx`: producto chat — layout 3 cols (left sidebar 280px | center chat max 760px | right panel finito colapsado 56px → 340px con pins), derivado de Odoo `globals.css` (warm light/dark tokens + density `builder/client`). Right panel inicial solo 2 iconos `pin` + `campana` (como Odoo), sin contenido hasta que haya pins.
+- `app/components/StrategyCard.tsx`: usado solo en `/dev` — estados `idle`/`retrieving`/`streaming`/`done`/`error` + trace.
+- `app/components/ChatBubble.tsx` / `MessageList.tsx` / `Composer.tsx`: producto chat — burbujas human derecha / agent izquierda (Odoo style), sources colapsables.
+- `app/components/ComparePanel.tsx`: legacy 6 cards non-stream — mantener solo referencia.
+- `app/globals.css`: traer sistema Odoo `globals.css` como base (tokens `:root`/`dark` + `@theme inline` + density), luego adaptar a verde campo. `DESIGN_GUIDELINES.md` de referencia en `../design-system/`.
+- `next.config.js`: rewrites `/api/proxy/*` -> `${process.env.BACKEND_URL || "http://127.0.0.1:8002"}/:path*` (Railway prod, 127 dev)
 
 ## Comandos utiles
 
@@ -33,17 +38,13 @@ cd ../agro-rag-back && uv run uvicorn api.main:app --port 8002 --app-dir src
 - **No commitear**: `node_modules/`, `.next/`, `out/`, `*.tsbuildinfo`
 - **Custom CSS** (variables de color) en `app/globals.css` — usar las vars de `:root` (`--bg`, `--accent`, etc) en vez de hardcodear hex
 
-## Si vas a tocar el comparador
+## Si vas a tocar el comparador / chat
 
-El flujo actual es streaming via `app/page.tsx` + `app/components/StrategyCard.tsx`:
+- **Lab `/dev` (`app/(dev)/dev/page.tsx` + `StrategyCard.tsx`):** junta `enabled` (toggles), `k`, `temperature`, `sem_bm25`/`lex_bm25`, `lang` y hace `POST /api/proxy/compare/stream` (SSE `strategy_retrieve`/`strategy_token`/`strategy_done`/`strategy_error`). Cada card `idle`→`retrieving`→`streaming` (▌)→`done` (`⏱ 📄 🎟` + fuentes + trace) / `error`. Valores elegidos acá son los que toma el producto (no hay UI para esto en `/`). **No tocar prod chat hasta avisar “PROD con usuarios” — baseline only fijo.**
+- **Producto chat (`app/(dashboard)/page.tsx`):** 1 burbuja por turno, `POST /api/proxy/compare/stream` con `enabled:["baseline"]` + `history` (mensajes previos). No muestra `k/temperature` — los hereda de `/dev`. Right panel fino con iconos `pin`/`campana` (Odoo `app/globals.css:291` sidebar 240px→56px colapsada).
+- **Backend:** `run_compare_stream` fan-out (`asyncio.gather`) + `trace` por strategy. Default 6 son `baseline`, `hybrid`, `rerank`, `query_rewrite`, `multi_query`, `hyde`; `lexical` y `rerank_ce` extra.
 
-- `app/page.tsx` junta `enabled` (toggles), `k`, `temperature`, `sem_bm25`/`lex_bm25`, `lang` y hace `POST /api/proxy/compare/stream` (SSE `strategy_retrieve` / `strategy_token` / `strategy_done` / `strategy_error`).
-- `StrategyCard` muestra por strategy: `idle` ("Esperando una consulta...") → `retrieving` (spinner "Buscando información...") → `streaming` (tokens + `▌`) → `done` (answer + métricas `⏱ 📄 🎟` + "Ver fuentes" + "Ver trace") / `error` (❌ mensaje OpenAI).
-- Cada card tiene toggle ON/OFF; `enabled` filtra qué strategies corren (default solo `baseline`).
-
-Legacy: `app/components/ComparePanel.tsx` hace `POST /api/proxy/compare` non-stream con 6 cards (`idle`/`running`/`done`/`error`). No tocar salvo para referencia.
-
-Las strategies se ejecutan en el backend en paralelo (`asyncio.gather` + `run_compare_stream`) y el `extra` field trae metadata (retrieval timings, trace). Las 6 del comparador default son `baseline`, `hybrid`, `rerank`, `query_rewrite`, `multi_query`, `hyde`; `lexical` y `rerank_ce` son extra (`get_extra_strategies`).
+Legacy: `ComparePanel.tsx` non-stream `POST /api/proxy/compare` 6 cards — solo referencia.
 
 ## Si vas a tocar el layout
 
