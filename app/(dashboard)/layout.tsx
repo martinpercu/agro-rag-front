@@ -9,6 +9,8 @@ type Investigation = {
   query: string | null;
   edition_id: string | null;
   created_at: string | null;
+  divisions?: Array<{ hectares: string; cultivo: string | null }>;
+  location?: Record<string, unknown> | null;
 };
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -91,6 +93,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {investigations.slice(0, 5).map((inv) => (
                   <div key={inv.id} className="sidebar-investigation-item" title={inv.query || ""}>
                     <span className="sidebar-investigation-query">{inv.query || "(sin query)"}</span>
+                    {inv.divisions && inv.divisions.length > 0 && (
+                      <span className="sidebar-investigation-divisions" style={{ fontSize: 11, opacity: 0.85, display: "block", marginTop: 2 }}>
+                        {inv.divisions.map((d) => `${d.hectares}ha${d.cultivo ? ` ${d.cultivo}` : ""}`).join(" · ")}
+                      </span>
+                    )}
                     <span className="sidebar-investigation-meta">
                       {inv.edition_id || "2026_05"} · {inv.created_at ? new Date(inv.created_at).toLocaleDateString("es-AR") : ""}
                     </span>
@@ -188,6 +195,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {investigations.slice(0, 8).map((inv) => (
                   <div key={inv.id} className="right-panel-item">
                     <div className="right-panel-item-query">{inv.query || "(sin query)"}</div>
+                    {inv.divisions && inv.divisions.length > 0 && (
+                      <div className="right-panel-item-divisions" style={{ fontSize: 12, opacity: 0.8, marginTop: 4 }}>
+                        {inv.divisions.map((d) => `${d.hectares}ha${d.cultivo ? ` ${d.cultivo}` : ""}`).join(" · ")}
+                      </div>
+                    )}
                     <div className="right-panel-item-meta">
                       {inv.edition_id} · {inv.created_at ? new Date(inv.created_at).toLocaleDateString("es-AR") : ""}
                     </div>

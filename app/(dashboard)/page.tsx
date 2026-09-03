@@ -259,9 +259,24 @@ export default function DashboardPage() {
         prev.map((m) => (m.id === assistantId ? { ...m, streaming: false } : m))
       );
 
-      // Save investigacion sutil (Fase 0) — no bloquea el chat
+      // Save investigacion sutil (Fase 2 baby step1: con divisions si el user mencionó ha/cultivo)
       if (accAnswer && !accAnswer.startsWith("En esta edicion no encontre")) {
         try {
+          // Parsear divisions via backend (mismo parser que field_collector) — no bloquea si falla
+          let divisions: Array<{ hectares: string; cultivo: string | null }> = [];
+          let planIntent = false;
+          try {
+            const parseRes = await fetch("/api/proxy/plan/parse", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ question, history: history.slice(-6) }),
+            });
+            if (parseRes.ok) {
+              const pj = await parseRes.json();
+              divisions = pj.divisions || [];
+              planIntent = !!pj.plan_intent;
+            }
+          } catch {}
           let saveAuthHeader: Record<string, string> = {};
           if (isSupabaseConfigured() && supabase) {
             const { data } = await supabase.auth.getSession();
@@ -273,7 +288,9 @@ export default function DashboardPage() {
             body: JSON.stringify({
               query: question,
               edition_id: "2026_05",
-              metadata: { k, temperature, sem_bm25: semBm25, lex_bm25: lexBm25, lang, intent },
+              divisions: divisions.length ? divisions : undefined,
+              location: {},
+              metadata: { k, temperature, sem_bm25: semBm25, lex_bm25: lexBm25, lang, intent, plan_intent: planIntent },
             }),
           });
           localStorage.setItem("agroposta_investigation_saved", String(Date.now()));
