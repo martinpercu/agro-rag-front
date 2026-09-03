@@ -155,7 +155,7 @@ export default function DashboardPage() {
     try {
       const res = await fetch(`/api/proxy/compare/stream`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...authHeader },
+        headers: { "Content-Type": "application/json", Accept: "text/event-stream", ...authHeader },
         body: JSON.stringify({
           question,
           enabled: ["baseline"],
@@ -166,6 +166,8 @@ export default function DashboardPage() {
           lex_bm25: lexBm25,
           temperature,
         }),
+        // @ts-ignore Next.js fetch cache
+        cache: "no-store" as RequestCache,
       });
 
       if (!res.ok || !res.body) {

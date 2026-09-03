@@ -216,7 +216,7 @@ export default function DevPage() {
     try {
       const res = await fetch(`/api/proxy/compare/stream`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...authHeader },
+        headers: { "Content-Type": "application/json", Accept: "text/event-stream", ...authHeader },
         body: JSON.stringify({
           question,
           enabled: enabledNames,
@@ -227,6 +227,8 @@ export default function DevPage() {
           temperature,
         }),
         signal: abortController.signal,
+        // @ts-ignore Next.js fetch cache
+        cache: "no-store" as RequestCache,
       });
 
       if (!res.ok || !res.body) {
@@ -245,6 +247,7 @@ export default function DevPage() {
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
+      let currentEvent = ""; // keep across chunks — event y data pueden venir separados
 
       while (true) {
         const { value, done } = await reader.read();
@@ -253,7 +256,7 @@ export default function DevPage() {
         const lines = buffer.split("\n");
         buffer = lines.pop() || "";
 
-        let currentEvent = "";
+
         for (const line of lines) {
           if (line.startsWith("event:")) {
             currentEvent = line.slice(6).trim();
