@@ -38,6 +38,18 @@ cd ../agro-rag-back && uv run uvicorn api.main:app --port 8002 --app-dir src
 - **No commitear**: `node_modules/`, `.next/`, `out/`, `*.tsbuildinfo`
 - **Custom CSS** (variables de color) en `app/globals.css` — usar las vars de `:root` (`--bg`, `--accent`, etc) en vez de hardcodear hex
 
+## Workflow de ramas (obligatorio desde 2026-09-03)
+
+Nunca a `main` directo. Baby steps en rama paralela back+front con mismo nombre:
+
+```bash
+git checkout -b feat/<nombre> && git push -u origin feat/<nombre>
+# ... commits chicos ...
+git status; git diff; git log --oneline -5
+git add <archivos> && git commit -m "feat: ..." && git push
+# PR → merge a main lo hace martin en GitHub (Vercel deploya)
+```
+
 ## Si vas a tocar el comparador / chat
 
 - **Lab `/dev` (`app/(dev)/dev/page.tsx` + `StrategyCard.tsx`):** junta `enabled` (toggles), `k`, `temperature`, `sem_bm25`/`lex_bm25`, `lang` y hace `POST /api/proxy/compare/stream` (SSE `strategy_retrieve`/`strategy_token`/`strategy_done`/`strategy_error`). Cada card `idle`→`retrieving`→`streaming` (▌)→`done` (`⏱ 📄 🎟` + fuentes + trace) / `error`. Valores elegidos acá son los que toma el producto (no hay UI para esto en `/`). **No tocar prod chat hasta avisar “PROD con usuarios” — baseline only fijo.**
