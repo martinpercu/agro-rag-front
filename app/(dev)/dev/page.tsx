@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { StrategyCard, type CardState } from "./components/StrategyCard";
-import { supabase, isSupabaseConfigured } from "./lib/supabase";
+import { StrategyCard, type CardState } from "../../components/StrategyCard";
+import { supabase, isSupabaseConfigured } from "../../lib/supabase";
 
 type Lang = "es" | "en";
 
 const TEXTS: Record<Lang, Record<string, string>> = {
   es: {
-    title: "Agroposta",
-    subtitle: "Comparador RAG · 7 estrategias lado a lado · Edición 2026/05",
+    title: "Agroposta — Lab",
+    subtitle: "Comparador RAG · 7 estrategias lado a lado · Edición 2026/05 · /dev",
     limpiar: "Limpiar",
     placeholder: "Hacele una pregunta a todas las estrategias...",
     enviar: "Enviar",
@@ -20,8 +20,8 @@ const TEXTS: Record<Lang, Record<string, string>> = {
     kMax: "Máxima cobertura",
   },
   en: {
-    title: "Agroposta",
-    subtitle: "RAG Comparator · 7 strategies side by side · Issue 2026/05",
+    title: "Agroposta — Lab",
+    subtitle: "RAG Comparator · 7 strategies side by side · Issue 2026/05 · /dev",
     limpiar: "Clear",
     placeholder: "Ask a question to all strategies...",
     enviar: "Send",
@@ -63,7 +63,21 @@ function makeInitialHistories(): Record<StrategyName, HistoryItem[]> {
   return h;
 }
 
-export default function Home() {
+function readStoredLang(): Lang {
+  if (typeof window === "undefined") return "es";
+  const v = localStorage.getItem("agroposta_lang");
+  return v === "en" || v === "es" ? v : "es";
+}
+function readStoredNumber(key: string, fallback: number, min: number, max: number): number {
+  if (typeof window === "undefined") return fallback;
+  const raw = localStorage.getItem(key);
+  if (!raw) return fallback;
+  const n = Number(raw);
+  if (Number.isNaN(n) || n < min || n > max) return fallback;
+  return n;
+}
+
+export default function DevPage() {
   const [lang, setLang] = useState<Lang>("es");
   const [states, setStates] = useState<Record<StrategyName, CardState>>(makeInitialState);
   const [histories, setHistories] = useState<Record<StrategyName, HistoryItem[]>>(makeInitialHistories);
@@ -82,10 +96,18 @@ export default function Home() {
 
   const busyRef = useRef(false);
   const t = TEXTS[lang];
+  const hydratedRef = useRef(false);
 
+  // Hydrate from localStorage after mount (avoids SSR mismatch)
   useEffect(() => {
-    const saved = localStorage.getItem("agroposta_lang");
-    if (saved === "en" || saved === "es") setLang(saved);
+    const vLang = readStoredLang();
+    if (vLang !== lang) setLang(vLang);
+    setK(readStoredNumber("agroposta_k", 6, 1, 16));
+    setTemperature(readStoredNumber("agroposta_temp", 0.2, 0, 1));
+    setSemBm25(readStoredNumber("agroposta_sem_bm25", 20, 1, 40));
+    setLexBm25(readStoredNumber("agroposta_lex_bm25", 20, 1, 40));
+    hydratedRef.current = true;
+    // Supabase auth
     if (isSupabaseConfigured() && supabase) {
       supabase.auth.getSession().then(({ data }) => {
         setUserEmail(data.session?.user?.email ?? null);
@@ -94,6 +116,57 @@ export default function Home() {
       return () => sub.subscription.unsubscribe();
     }
   }, []);
+
+  // Keep in sync if another tab or dashboard changes the values
+  useEffect(() => {
+    function syncFromStorage() {
+      if (!hydratedRef.current) return;
+      setK(readStoredNumber("agroposta_k", 6, 1, 16));
+      setTemperature(readStoredNumber("agroposta_temp", 0.2, 0, 1));
+      setSemBm25(readStoredNumber("agroposta_sem_bm25", 20, 1, 40));
+      setLexBm25(readStoredNumber("agroposta_lex_bm25", 20, 1, 40));
+      setLang(readStoredLang());
+    }
+    function onStorage(e: StorageEvent) {
+      if (
+        e.key === "agroposta_k" ||
+        e.key === "agroposta_temp" ||
+        e.key === "agroposta_sem_bm25" ||
+        e.key === "agroposta_lex_bm25" ||
+        e.key === "agroposta_lang"
+      ) {
+        syncFromStorage();
+      }
+    }
+    window.addEventListener("storage", onStorage);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") syncFromStorage();
+    });
+    window.addEventListener("focus", syncFromStorage);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      document.removeEventListener("visibilitychange", syncFromStorage);
+      window.removeEventListener("focus", syncFromStorage);
+    };
+  }, []);
+
+  // Helpers that persist immediately so dashboard can inherit (no useEffect to avoid mount overwrite)
+  function setKAndPersist(v: number) {
+    setK(v);
+    localStorage.setItem("agroposta_k", String(v));
+  }
+  function setTempAndPersist(v: number) {
+    setTemperature(v);
+    localStorage.setItem("agroposta_temp", String(v));
+  }
+  function setSemAndPersist(v: number) {
+    setSemBm25(v);
+    localStorage.setItem("agroposta_sem_bm25", String(v));
+  }
+  function setLexAndPersist(v: number) {
+    setLexBm25(v);
+    localStorage.setItem("agroposta_lex_bm25", String(v));
+  }
 
   function toggleLang() {
     const next: Lang = lang === "es" ? "en" : "es";
@@ -143,7 +216,7 @@ export default function Home() {
     try {
       const res = await fetch(`/api/proxy/compare/stream`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...authHeader },
+        headers: { "Content-Type": "application/json", Accept: "text/event-stream", ...authHeader },
         body: JSON.stringify({
           question,
           enabled: enabledNames,
@@ -154,6 +227,8 @@ export default function Home() {
           temperature,
         }),
         signal: abortController.signal,
+        // @ts-ignore Next.js fetch cache
+        cache: "no-store" as RequestCache,
       });
 
       if (!res.ok || !res.body) {
@@ -172,6 +247,7 @@ export default function Home() {
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
+      let currentEvent = ""; // keep across chunks — event y data pueden venir separados
 
       while (true) {
         const { value, done } = await reader.read();
@@ -180,7 +256,7 @@ export default function Home() {
         const lines = buffer.split("\n");
         buffer = lines.pop() || "";
 
-        let currentEvent = "";
+
         for (const line of lines) {
           if (line.startsWith("event:")) {
             currentEvent = line.slice(6).trim();
@@ -285,7 +361,7 @@ export default function Home() {
       <header className="grid-header">
         <div>
           <h1>{t.title}</h1>
-          <div className="subtitle">{t.subtitle}</div>
+          <div className="subtitle">{t.subtitle} — <a href="/" style={{ color: "var(--accent)", textDecoration: "underline" }}>ir al chat producto →</a></div>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           {isSupabaseConfigured() ? (
@@ -352,7 +428,7 @@ export default function Home() {
                 max={1}
                 step={0.1}
                 value={temperature}
-                onChange={(e) => setTemperature(Number(e.target.value))}
+                onChange={(e) => setTempAndPersist(Number(e.target.value))}
                 style={{ "--k-pct": `${temperature * 100}%` } as React.CSSProperties}
               />
               <span className="k-max">1</span>
@@ -375,7 +451,7 @@ export default function Home() {
                 min={1}
                 max={16}
                 value={k}
-                onChange={(e) => setK(Number(e.target.value))}
+                onChange={(e) => setKAndPersist(Number(e.target.value))}
                 style={{ "--k-pct": `${((k - 1) / 15) * 100}%` } as React.CSSProperties}
               />
               <span className="k-max">16</span>
@@ -396,7 +472,7 @@ export default function Home() {
                 max={40}
                 value={semBm25}
                 onChange={(e) =>
-                  setSemBm25(Math.min(40, Math.max(1, Number(e.target.value) || 20)))
+                  setSemAndPersist(Math.min(40, Math.max(1, Number(e.target.value) || 20)))
                 }
               />
             </label>
@@ -408,7 +484,7 @@ export default function Home() {
                 max={40}
                 value={lexBm25}
                 onChange={(e) =>
-                  setLexBm25(Math.min(40, Math.max(1, Number(e.target.value) || 20)))
+                  setLexAndPersist(Math.min(40, Math.max(1, Number(e.target.value) || 20)))
                 }
               />
             </label>
