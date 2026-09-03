@@ -1,0 +1,125 @@
+/* ==========================================================================
+   components/LogPanel.css — Agroposta
+   Panels para trace / sources / logs hundidos. Ver guidelines.md §4.5
+   ========================================================================== */
+
+.ap-log {
+  background: var(--bg-deep);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  box-shadow: inset 0 1px 2px rgba(26,46,38,0.04);
+  overflow: hidden;
+}
+.dark .ap-log { box-shadow: inset 0 1px 4px rgba(0,0,0,0.32); }
+
+.ap-log__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  font-size: var(--text-small);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
+}
+.ap-log__header small {
+  font-family: var(--font-technical);
+  font-size: var(--text-micro);
+  color: var(--text-tertiary);
+  font-weight: var(--font-weight-regular);
+  letter-spacing: var(--tracking-technical);
+}
+
+.ap-log__body {
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 0;
+  font-family: var(--font-technical);
+  font-size: 11px;
+  line-height: var(--leading-technical);
+}
+
+/* Trace rows */
+.ap-trace-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  column-gap: 10px;
+  align-items: baseline;
+  padding: 6px 12px;
+  border-bottom: 1px dotted var(--border-subtle);
+}
+.ap-trace-item:last-child { border-bottom: none; }
+.ap-trace-item:hover { background: rgba(45,106,79,0.04); }
+.dark .ap-trace-item:hover { background: rgba(82,183,136,0.06); }
+
+.ap-trace-step {
+  color: var(--brand-hover);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+.ap-trace-ms,
+.ap-trace-acc {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-align: right;
+}
+.ap-trace-ms { color: var(--text-muted); }
+.ap-trace-acc { color: #9AB0A6; }
+.ap-trace-detail {
+  grid-column: 1 / -1;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+}
+
+/* Sources list */
+.ap-source {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 12px;
+  border-bottom: 1px dotted var(--border-subtle);
+  font-size: 11px;
+  line-height: 1.4;
+}
+.ap-source:last-child { border-bottom: none; }
+.ap-source__label {
+  color: var(--text-muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ap-source__value {
+  color: var(--brand-hover);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--font-weight-semibold);
+  flex-shrink: 0;
+}
+.ap-source__bar {
+  height: 3px;
+  border-radius: 2px;
+  margin: 4px 12px 8px;
+  background: linear-gradient(to right, var(--brand) var(--pct, 50%), var(--border-subtle) var(--pct, 50%));
+}
+
+/* Dashed divider variant (para card footer) */
+.ap-log--dashed {
+  border-style: dashed;
+  border-top: 1px dashed var(--border);
+  border-left: none; border-right: none; border-bottom: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding-top: 8px;
+  margin-top: 6px;
+}
+
+/* Empty */
+.ap-log__empty {
+  padding: 20px 12px;
+  text-align: center;
+  color: var(--text-tertiary);
+  font-style: italic;
+  font-family: var(--font-sans);
+  font-size: var(--text-small);
+}

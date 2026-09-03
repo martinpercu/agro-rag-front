@@ -1,0 +1,198 @@
+/* ==========================================================================
+   components/Input.css — Agroposta
+   Inputs, textarea, composer, K/slider controls. Ver guidelines.md §4.6
+   ========================================================================== */
+
+/* Field wrapper */
+.ap-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ap-field__label {
+  font-size: var(--text-small);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
+  letter-spacing: 0.01em;
+}
+.ap-field__hint {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  line-height: 1.4;
+}
+.ap-field__error {
+  font-size: 11px;
+  color: var(--error);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Base input */
+.ap-input,
+.ap-textarea,
+.ap-select {
+  width: 100%;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-xs);
+  transition:
+    border-color var(--duration-base) var(--ease-default),
+    box-shadow var(--duration-base) var(--ease-default),
+    background var(--duration-base) var(--ease-default);
+}
+.ap-input,
+.ap-select { height: 40px; padding: 0 12px; }
+.ap-textarea { padding: 10px 12px; resize: vertical; min-height: 80px; }
+
+.ap-input::placeholder,
+.ap-textarea::placeholder { color: var(--text-tertiary); }
+
+.ap-input:hover,
+.ap-textarea:hover,
+.ap-select:hover { border-color: var(--border-strong); }
+
+.ap-input:focus,
+.ap-textarea:focus,
+.ap-select:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: var(--focus-ring);
+  background: #fff;
+}
+.dark .ap-input:focus,
+.dark .ap-textarea:focus { background: var(--bg-surface); }
+
+.ap-input:disabled,
+.ap-textarea:disabled { opacity: 0.55; cursor: not-allowed; background: var(--bg-muted); }
+.ap-input.is-error,
+.ap-textarea.is-error { border-color: var(--error); }
+.ap-input.is-error:focus { box-shadow: var(--focus-ring-error); }
+
+/* Sizes */
+.ap-input--sm, .ap-select--sm { height: 32px; font-size: 13px; border-radius: var(--radius-sm); }
+.ap-input--lg { height: 44px; font-size: 15px; border-radius: var(--radius-lg); }
+
+/* Input with icon */
+.ap-input-wrap { position: relative; display: flex; align-items: center; }
+.ap-input-wrap svg {
+  position: absolute; left: 10px; width: 16px; height: 16px;
+  color: var(--text-tertiary); pointer-events: none;
+}
+.ap-input-wrap .ap-input { padding-left: 34px; }
+
+/* Technical mono input (para K, scores, edition) */
+.ap-input--technical {
+  font-family: var(--font-technical);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-technical);
+  font-size: var(--text-technical);
+}
+
+/* Composer — fixed bottom pattern */
+.ap-composer {
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  padding: var(--composer-padding, 12px) 16px 16px;
+  box-shadow: 0 -4px 12px rgba(26,46,38,0.04);
+}
+.ap-composer__inner {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  max-width: 760px;
+  margin: 0 auto;
+}
+.ap-composer__inner .ap-textarea {
+  flex: 1;
+  min-height: 44px;
+  max-height: 120px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-base);
+}
+.ap-composer__inner .ap-textarea:focus { background: var(--bg-surface); }
+
+/* K control pills (compat con globals.css actual) */
+.ap-k-control,
+.ap-branch-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px 3px 6px;
+  background: var(--brand-subtle);
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  transition: border-color var(--duration-base) var(--ease-default);
+}
+.ap-k-control:focus-within,
+.ap-branch-field:focus-within { border-color: var(--brand); }
+
+.ap-k-label {
+  font-size: var(--text-micro);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: var(--tracking-micro);
+  color: var(--brand-hover);
+  background: var(--bg-surface);
+  padding: 0 8px;
+  line-height: 22px;
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-xs);
+}
+
+.ap-k-value {
+  font-family: var(--font-technical);
+  font-size: 15px;
+  font-weight: var(--font-weight-extrabold);
+  color: var(--brand-hover);
+  min-width: 20px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Slider — fix bolita flotando: palito interior siempre visible y centrado */
+.ap-slider {
+  -webkit-appearance: none; appearance: none;
+  width: 120px; height: 4px; border-radius: 9999px;
+  background: linear-gradient(to right, var(--brand) 0%, var(--brand) var(--k-pct, 50%), var(--border-subtle) var(--k-pct, 50%), var(--border-subtle) 100%);
+  cursor: pointer;
+  outline: none;
+  vertical-align: middle;
+}
+/* Track — asegura que el palito tenga altura y no quede flotando */
+.ap-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 9999px;
+  background: transparent; /* el fondo va en el input para que JS controle --k-pct */
+}
+.ap-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 9999px;
+  background: var(--border-subtle);
+  border: none;
+}
+.ap-slider::-moz-range-progress {
+  height: 4px;
+  border-radius: 9999px;
+  background: var(--brand);
+}
+.ap-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--brand); border: 3px solid var(--bg-surface);
+  box-shadow: 0 1px 4px rgba(26,46,38,0.18), 0 0 0 1px rgba(26,46,38,0.06);
+  cursor: pointer;
+  margin-top: -7px; /* centra thumb de 18px sobre track de 4px: (4-18)/2 */
+  transition: transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+}
+.ap-slider::-webkit-slider-thumb:hover { transform: scale(1.15); box-shadow: 0 2px 8px rgba(26,46,38,0.22); }
+.ap-slider::-webkit-slider-thumb:active { transform: scale(0.96); }
+.ap-slider::-moz-range-thumb {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--brand); border: 3px solid var(--bg-surface);
+  box-shadow: 0 1px 4px rgba(26,46,38,0.18);
+  cursor: pointer;
+  transition: transform var(--duration-fast) var(--ease-out);
+}

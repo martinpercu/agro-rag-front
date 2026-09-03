@@ -1,0 +1,117 @@
+/* ==========================================================================
+   components/Button.css — Agroposta
+   Botones con verbo de ejecución. Un primary por vista. Ver guidelines.md §4.1
+   Clases: .ap-btn .ap-btn--primary | --secondary | --ghost | --destructive
+           .ap-btn--sm | --md | --lg   .ap-btn--icon  :disabled
+   ========================================================================== */
+
+.ap-btn {
+  --btn-bg: var(--bg-surface);
+  --btn-fg: var(--text-primary);
+  --btn-border: var(--border);
+  --btn-ring: var(--brand-ring);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1;
+  border: 1px solid var(--btn-border);
+  border-radius: var(--radius);
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  text-decoration: none;
+  transition:
+    background var(--duration-base) var(--ease-default),
+    border-color var(--duration-base) var(--ease-default),
+    color var(--duration-base) var(--ease-default),
+    box-shadow var(--duration-base) var(--ease-default),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.ap-btn:focus-visible {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: var(--focus-ring);
+}
+.ap-btn:active:not(:disabled) { transform: scale(0.98); }
+
+/* Sizes */
+.ap-btn--sm { height: 32px; padding: 0 12px; font-size: 13px; border-radius: var(--radius-sm); }
+.ap-btn--md { height: 40px; padding: 0 16px; font-size: 14px; }
+.ap-btn--lg { height: 44px; padding: 0 20px; font-size: 15px; border-radius: var(--radius-lg); }
+
+/* Variants */
+.ap-btn--primary {
+  --btn-bg: var(--brand);
+  --btn-fg: var(--text-on-brand);
+  --btn-border: var(--brand);
+}
+.ap-btn--primary:hover:not(:disabled) { --btn-bg: var(--brand-hover); --btn-border: var(--brand-hover); }
+.ap-btn--primary:active:not(:disabled) { --btn-bg: var(--brand-active); }
+
+.ap-btn--secondary {
+  --btn-bg: var(--bg-surface);
+  --btn-fg: var(--text-primary);
+  --btn-border: var(--border);
+}
+.ap-btn--secondary:hover:not(:disabled) {
+  --btn-bg: var(--brand-subtle);
+  --btn-border: var(--brand-border);
+  --btn-fg: var(--brand-hover);
+}
+
+.ap-btn--ghost {
+  --btn-bg: transparent;
+  --btn-fg: var(--text-secondary);
+  --btn-border: transparent;
+}
+.ap-btn--ghost:hover:not(:disabled) {
+  --btn-bg: var(--bg-muted);
+  --btn-fg: var(--text-primary);
+}
+
+.ap-btn--destructive {
+  --btn-bg: var(--error);
+  --btn-fg: #fff;
+  --btn-border: var(--error);
+}
+.ap-btn--destructive:hover:not(:disabled) { --btn-bg: #7A1A1E; --btn-border: #7A1A1E; }
+
+.ap-btn:disabled {
+  opacity: 0.52;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Icon-only */
+.ap-btn--icon { width: 40px; padding: 0; aspect-ratio: 1; }
+.ap-btn--icon.ap-btn--sm { width: 32px; }
+.ap-btn--icon.ap-btn--lg { width: 44px; }
+
+/* With icon + label: ensure icon doesn't shrink */
+.ap-btn svg, .ap-btn [data-lucide] { flex-shrink: 0; width: 16px; height: 16px; }
+.ap-btn--sm svg { width: 14px; height: 14px; }
+.ap-btn--lg svg { width: 18px; height: 18px; }
+
+/* Loading state */
+.ap-btn.is-loading { pointer-events: none; }
+.ap-btn.is-loading::before {
+  content: "";
+  width: 14px; height: 14px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: ap-spin 0.7s linear infinite;
+  opacity: 0.9;
+}
+@keyframes ap-spin { to { transform: rotate(360deg); } }
+
+/* Full width helper */
+.ap-btn--block { width: 100%; }

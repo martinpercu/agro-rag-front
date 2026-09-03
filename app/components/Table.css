@@ -1,0 +1,73 @@
+/* ==========================================================================
+   components/Table.css — Agroposta
+   Tablas para comparador y biblioteca. Ver guidelines.md §4.4
+   ========================================================================== */
+
+.ap-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-xs);
+}
+.ap-table-wrap--deep { background: var(--bg-deep); }
+
+.ap-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-body);
+  line-height: 1.5;
+}
+
+.ap-table thead th {
+  font-size: var(--text-micro);
+  letter-spacing: var(--tracking-micro);
+  text-transform: uppercase;
+  font-weight: var(--font-weight-bold);
+  color: var(--text-tertiary);
+  background: var(--bg-muted);
+  padding: 8px 12px;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border-subtle);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.ap-table tbody td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+.ap-table tbody tr:last-child td { border-bottom: none; }
+.ap-table tbody tr:hover td { background: var(--bg-subtle); }
+
+/* Technical columns — mono tabular, right aligned */
+.ap-table td.is-technical,
+.ap-table th.is-technical {
+  font-family: var(--font-technical);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-technical);
+  letter-spacing: var(--tracking-technical);
+}
+.ap-table td.is-numeric { text-align: right; }
+
+/* Sortable header */
+.ap-table th.is-sortable { cursor: pointer; user-select: none; }
+.ap-table th.is-sortable:hover { color: var(--text-primary); background: var(--bg-subtle); }
+
+/* Empty */
+.ap-table__empty td {
+  text-align: center;
+  color: var(--text-tertiary);
+  font-style: italic;
+  padding: 24px 12px !important;
+}
+
+/* Density */
+.builder .ap-table thead th { padding: 6px 10px; }
+.builder .ap-table tbody td { padding: 6px 10px; font-size: 13px; }
+.client .ap-table thead th { padding: 10px 14px; }
+.client .ap-table tbody td { padding: 12px 14px; }

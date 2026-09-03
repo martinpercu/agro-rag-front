@@ -1,57 +1,525 @@
 @import "tailwindcss";
+@import "./components/Button.css";
+@import "./components/Card.css";
+@import "./components/Input.css";
+@import "./components/Badge.css";
+@import "./components/Table.css";
+@import "./components/LogPanel.css";
+
+@theme inline {
+  /* Surfaces */
+  --color-bg: var(--bg-base);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-muted: var(--bg-muted);
+  --color-bg-subtle: var(--bg-subtle);
+  --color-bg-deep: var(--bg-deep);
+
+  /* Text */
+  --color-fg: var(--text-primary);
+  --color-fg-secondary: var(--text-secondary);
+  --color-fg-tertiary: var(--text-tertiary);
+  --color-fg-inverse: var(--text-inverse);
+  --color-fg-muted: var(--text-muted);
+
+  /* Brand / Accent */
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-active: var(--brand-active);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-subtle: var(--brand-subtle);
+  --color-accent: var(--brand);
+  --color-accent-dark: var(--brand-hover);
+
+  /* Semantic */
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-success-border: var(--success-border);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-error: var(--error);
+  --color-error-bg: var(--error-bg);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
+
+  /* Neutrals / Borders */
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-border-subtle: var(--border-subtle);
+  --color-muted: var(--text-muted);
+
+  /* Surfaces alias legacy */
+  --color-card: var(--bg-surface);
+  --color-card-hover: var(--bg-subtle);
+
+  /* Radius */
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+
+  /* Fonts */
+  --font-sans: var(--font-sans);
+  --font-technical: var(--font-technical);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-technical);
+
+  /* Type scale */
+  --text-display: var(--text-display);
+  --text-title: var(--text-title);
+  --text-heading: var(--text-heading);
+  --text-body: var(--text-body);
+  --text-small: var(--text-small);
+  --text-micro: var(--text-micro);
+  --text-technical: var(--text-technical);
+}
 
 :root {
-  --bg: #FEFDFC;
-  --fg: #1A2E26;
-  --card: #F8FAF9;
-  --card-hover: #f0f5f2;
-  --accent: #40916C;
-  --accent-dark: #2D6A4F;
-  --accent-soft: #c8e6d9;
-  --secondary: #F1C40F;
-  --secondary-soft: #FDF6D6;
-  --muted: #5a7a6e;
-  --border: #A3C4BC;
-  --user-bg: #c8e6d9;
-  --agent-bg: #FEFDFC;
-  --error: #d32f2f;
-  --error-bg: #fef2f2;
+  /* ---- Brand — Oliva suave (nuevo default light, por pedido 2026-08-31 v0.5) ---- */
+  /* Light = Oliva #3A5A40. Dark base = Tranquera #52B788 (html.dark). Solo queda Oliva + Oliva-beta */
+  --brand-50: #EAF2EC;
+  --brand-100: #D5E2DC;
+  --brand-200: #B8CFC0;
+  --brand-300: #8FB0A0;
+  --brand-400: #5A8C7A;
+  --brand-500: #3A5A40; /* BRAND principal — oliva suave (nuevo default light) */
+  --brand-600: #2F4A35;
+  --brand-700: #253D2B;
+  --brand-800: #1C3022;
+  --brand-900: #14231A;
+  --brand-950: #0E1A13;
 
-  --c-neutral: #888;
-  --c-green: #40916C;
-  --c-purple: #5a3e9a;
-  --c-orange: #c25b1f;
-  --c-teal: #1a7a96;
-  --c-red: #a04545;
-  --c-blue: #2f6fb2;
+  --brand: var(--brand-500);
+  --brand-hover: var(--brand-600);
+  --brand-active: var(--brand-700);
+  --brand-soft: #D5E2DC;
+  --brand-subtle: #E8F0E9;
+  --brand-border: #A8B8A8;
+  --brand-ring: rgba(58,90,64,0.20);
 
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
-  --shadow-md: 0 2px 8px rgba(0,0,0,0.06);
-  --radius: 10px;
+  /* ---- Earth — Tierra arada / piedra (oliva) ---- */
+  --earth-50: #F7F3EE;
+  --earth-100: #F7F3EE;
+  --earth-200: #D8CFC2;
+  --earth-300: #C2B8A8;
+  --earth-400: #B8A082; /* trigo/piedra oliva */
+  --earth-500: #6B5E55; /* tierra piedra */
+  --earth-600: #5A4F45;
+  --earth-700: #4A3F38;
+
+  --wheat: var(--earth-400);
+  --wheat-soft: #F7F3EE;
+  --wheat-border: var(--earth-200);
+  --soil: var(--earth-500);
+
+  /* ---- Semantic ---- */
+  --success: var(--brand-500);
+  --success-bg: #E8F0E9;
+  --success-border: var(--brand-200);
+  --success-soft: #E8F0E9;
+
+  --warning: #C9902E;
+  --warning-bg: #FFF8E6;
+  --warning-border: #F0D98A;
+  --warning-soft: #FDF6D6;
+
+  --error: #9B2226;
+  --error-bg: #FEF2F2;
+  --error-border: #E8A0A0;
+  --error-soft: #FDE8E8;
+
+  --info: #1D6FA5;
+  --info-bg: #EFF6FB;
+  --info-border: #A8CCE4;
+  --info-soft: #E6F0F7;
+
+  /* ---- Neutrals — cálidos, no grises fríos ---- */
+  --neutral-0: #FFFFFF;
+  --neutral-50: #F7F9F6; /* papel oliva */
+  --neutral-100: #F8FAF9;
+  --neutral-200: #EAEFEA; /* lino oliva */
+  --neutral-300: #E0E8E2;
+  --neutral-400: #C9C5B8;
+  --neutral-500: #8A867E;
+  --neutral-600: #6B6860;
+  --neutral-700: #3D3B36;
+  --neutral-800: #1C1917;
+  --neutral-900: #12110F;
+
+  /* ---- Surfaces — Oliva light ---- */
+  --bg-base: #F7F9F6; /* oliva light — nuevo default */
+  --bg-surface: #FFFFFF;
+  --bg-muted: #EAEFEA;
+  --bg-subtle: #E8F0E9;
+  --bg-deep: #E0E8E2;
+  --bg-inverse: #1C2420;
+
+  /* Compat legacy */
+  --bg: var(--bg-base);
+  --fg: var(--text-primary);
+  --card: var(--bg-surface);
+  --card-hover: var(--bg-subtle);
+  --accent: var(--brand);
+  --accent-dark: var(--brand-hover);
+  --accent-soft: var(--brand-soft);
+  --secondary: var(--wheat);
+  --secondary-soft: var(--wheat-soft);
+  --user-bg: var(--brand-soft);
+  --agent-bg: var(--bg-surface);
+
+  /* ---- Text — oliva ---- */
+  --text-primary: #232926; /* oliva muy oscuro */
+  --text-secondary: #4A5450;
+  --text-tertiary: #6B7A74;
+  --text-muted: #6B7A74;
+  --text-inverse: #F7F9F6;
+  --text-on-brand: #FFFFFF;
+  --text-technical: #232926;
+
+  /* ---- Borders — oliva ---- */
+  --border: #C2CCBF;
+  --border-subtle: #D8E2DC;
+  --border-strong: #A8B8A8;
+  --border-inverse: #1C2420;
+
+  /* ---- Strategy tone accents (para ComparePanel 7 cards) ---- */
+  --c-neutral: #888888;
+  --c-green: var(--brand-400);
+  --c-purple: #5A3E9A;
+  --c-orange: #C25B1F;
+  --c-teal: #1A7A96;
+  --c-red: #9B2226;
+  --c-blue: #2F6FB2;
+
+  /* ---- Typography — Inter suavizada (default por pedido 2026-08-31, historial preservado) ---- */
+  /* Default ahora es Inter suavizada: Inter 600 (no 800), tracking -0.015, leading 1.65.
+     DM Sans + Fraunces queda como variante histórica html.typo-tranquera.
+     Roboto Mono sigue obligatorio solo para datos técnicos. */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-technical: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  /* Alias técnico legacy */
+  --font-mono: var(--font-technical);
+
+  /* Type scale — Inter suavizada, más aireada que legacy */
+  --text-display: 40px;
+  --text-title: 26px;
+  --text-heading: 20px;
+  --text-subheading: 16px;
+  --text-body: 14px;
+  --text-small: 12px;
+  --text-micro: 10px;
+  --text-technical: 11px;
+
+  --leading-display: 1.1;
+  --leading-title: 1.2;
+  --leading-heading: 1.35;
+  --leading-body: 1.65;
+  --leading-technical: 1.45;
+  --tracking-technical: 0.02em;
+  --tracking-micro: 0.05em;
+  --tracking-display: -0.015em;
+  --tracking-title: -0.01em;
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 600;   /* 700→600 suavizada */
+  --font-weight-extrabold: 700;
+
+  /* ---- Spacing — base 4px (como Odoo) ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* ---- Radius ---- */
   --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-pill: 9999px;
+
+  /* ---- Shadows — suaves, no neumórficos ---- */
+  --shadow-xs: 0 1px 2px rgba(26, 46, 38, 0.04);
+  --shadow-sm: 0 1px 3px rgba(26, 46, 38, 0.06);
+  --shadow-md: 0 2px 8px rgba(26, 46, 38, 0.08);
+  --shadow-lg: 0 8px 24px rgba(26, 46, 38, 0.10);
+  --shadow-brand: 0 2px 12px rgba(45, 106, 79, 0.18);
+
+  /* ---- Motion — 150ms base como Odoo ---- */
+  --duration-fast: 120ms;
+  --duration-base: 150ms;
+  --duration-slow: 240ms;
+  --duration-slower: 320ms;
+  --ease-default: cubic-bezier(0.2, 0, 0, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* ---- Focus ---- */
+  --focus-ring: 0 0 0 3px var(--brand-ring);
+  --focus-ring-error: 0 0 0 3px rgba(155, 34, 38, 0.18);
+  --focus-border: var(--brand);
+
+  /* ---- Z-index scale ---- */
+  --z-base: 0;
+  --z-sticky: 10;
+  --z-dropdown: 20;
+  --z-composer: 30;
+  --z-overlay: 40;
+  --z-modal: 50;
+  --z-toast: 60;
 }
+
+html.dark, .dark {
+  --brand-50: #1A2E26;
+  --brand-100: #1E3A2E;
+  --brand-200: #2A4A3A;
+  --brand-300: #3A6B4F;
+  --brand-400: #40916C;
+  --brand-500: #52B788;
+  --brand-600: #74C69E;
+  --brand-700: #95D5B2;
+  --brand-800: #B7E4C7;
+  --brand-900: #D8F3DC;
+
+  --brand: var(--brand-400);
+  --brand-hover: var(--brand-500);
+  --brand-active: var(--brand-600);
+  --brand-soft: #1E3A2E;
+  --brand-subtle: #1A2E26;
+  --brand-border: #2A4A3A;
+  --brand-ring: rgba(64, 145, 108, 0.32);
+
+  --bg-base: #121914;   /* reemplaza #1A1816 de Odoo — verde noche */
+  --bg-surface: #1C2621;
+  --bg-muted: #232F2A;
+  --bg-subtle: #283830;
+  --bg-deep: #0E1512;
+  --bg-inverse: #FDFCF8;
+
+  --bg: var(--bg-base);
+  --card: var(--bg-surface);
+  --card-hover: var(--bg-subtle);
+  --accent: var(--brand);
+  --accent-dark: #95D5B2;
+  --accent-soft: var(--brand-soft);
+  --user-bg: #1E3A2E;
+  --agent-bg: var(--bg-surface);
+
+  --text-primary: #E8EDE9;
+  --text-secondary: #B7C4BE;
+  --text-tertiary: #8A9A93;
+  --text-muted: #8A9A93;
+  --text-inverse: #121914;
+  --text-on-brand: #0E221A;
+
+  --border: #2A3D34;
+  --border-subtle: #1E2E26;
+  --border-strong: #3A4F45;
+  --border-inverse: #E8EDE9;
+
+  --success: #52B788;
+  --success-bg: #1A2E26;
+  --warning: #E9B44C;
+  --warning-bg: #2A2210;
+  --error: #E07A7A;
+  --error-bg: #2A1A1A;
+  --info: #7FB8D8;
+  --info-bg: #1A2329;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.24);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.32);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.40);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.48);
+
+  /* Strategy tones en dark — un poco más luminosos */
+  --c-neutral: #9A9A9A;
+  --c-green: #52B788;
+  --c-purple: #9A7ED8;
+  --c-orange: #E07A3A;
+  --c-teal: #5AB8D0;
+  --c-red: #E07A7A;
+  --c-blue: #7FB8D8;
+}
+
+.builder {
+  --density: compact;
+  --card-padding-y: 8px;
+  --card-padding-x: 12px;
+  --card-gap: 10px;
+  --text-body: 13px;
+  --text-small: 11px;
+  --radius: 8px;
+  --composer-padding: 10px;
+}
+
+.client {
+  --density: comfortable;
+  --card-padding-y: 14px;
+  --card-padding-x: 16px;
+  --card-gap: 16px;
+  --text-body: 15px;
+  --text-small: 13px;
+  --radius: 12px;
+  --composer-padding: 16px;
+}
+
+/* Default density (si no hay modificador) */
+:where(:root:not(.builder):not(.client)) {
+  --card-padding-y: 10px;
+  --card-padding-x: 14px;
+  --card-gap: 14px;
+  --composer-padding: 12px;
+}
+
 
 * { box-sizing: border-box; }
 
 html, body {
   margin: 0;
   padding: 0;
-  background: var(--bg);
-  color: var(--fg);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-size: 16px;
-  line-height: 1.5;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar { width: 6px; }
+/* Type scale utilities — como Odoo text-display … text-micro, Inter suavizada default */
+.text-display {
+  font-family: var(--font-display);
+  font-size: var(--text-display);
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-display);
+  font-weight: var(--font-weight-bold);
+}
+.text-title {
+  font-family: var(--font-display);
+  font-size: var(--text-title);
+  line-height: var(--leading-title);
+  letter-spacing: var(--tracking-title, -0.01em);
+  font-weight: var(--font-weight-bold);
+}
+.text-heading {
+  font-family: var(--font-sans);
+  font-size: var(--text-heading);
+  line-height: var(--leading-heading);
+  font-weight: var(--font-weight-semibold);
+}
+.text-body { font-size: var(--text-body); line-height: var(--leading-body); }
+.text-small { font-size: var(--text-small); line-height: 1.5; }
+.text-micro {
+  font-size: var(--text-micro);
+  line-height: 1.3;
+  letter-spacing: var(--tracking-micro);
+  text-transform: uppercase;
+  font-weight: var(--font-weight-bold);
+}
+.text-technical,
+.font-technical,
+.docnum {
+  font-family: var(--font-technical);
+  font-size: var(--text-technical);
+  line-height: var(--leading-technical);
+  letter-spacing: var(--tracking-technical);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "zero" 1;
+}
+.docnum {
+  color: var(--text-tertiary);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Deep surface — para logs, trace, panels hundidos (como Odoo .deep-surface) */
+.deep-surface {
+  background: var(--bg-deep);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  box-shadow: inset 0 1px 2px rgba(26, 46, 38, 0.04);
+}
+.dark .deep-surface {
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.32);
+}
+
+
+* { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+::-webkit-scrollbar-corner { background: transparent; }
+
+   -------------------------------------------------------------------------- */
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: none;
+  border-color: var(--focus-border);
+  box-shadow: var(--focus-ring);
+}
+:where(input, textarea, select).error:focus-visible,
+.error:focus-visible { box-shadow: var(--focus-ring-error); }
+
+/* Fallback para navegación con mouse: sin anillo si no es keyboard */
+:where(a, button):focus:not(:focus-visible) { box-shadow: none; }
+
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Transiciones base para elementos interactivos */
+:where(button, a, input, textarea, select) {
+  transition:
+    background var(--duration-base) var(--ease-default),
+    border-color var(--duration-base) var(--ease-default),
+    color var(--duration-base) var(--ease-default),
+    box-shadow var(--duration-base) var(--ease-default),
+    transform var(--duration-fast) var(--ease-out),
+    opacity var(--duration-base) var(--ease-default);
+}
+
+::selection {
+  background: var(--brand-soft);
+  color: var(--text-primary);
+}
+.dark ::selection {
+  background: var(--brand-soft);
+  color: var(--text-primary);
+}
+
+
+:root {
+  /* Aliases ya definidos arriba, solo asegurar que existan para código viejo */
+  --muted: var(--text-muted);
+  --border: var(--border);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --radius: var(--radius);
+  --radius-sm: var(--radius-sm);
+}
 
 /* ------------------------------------------------------------------ */
-/* K slider control */
+/* Preserved dashboard — strategy-card, composer, layout-grid, 3 cols */
 /* ------------------------------------------------------------------ */
 
 .k-control {
