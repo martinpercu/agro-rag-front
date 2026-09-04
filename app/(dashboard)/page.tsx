@@ -334,10 +334,10 @@ export default function DashboardPage() {
         </div>
         <div className="chat-header-right">
           <ThemeToggle variant="ghost" size="sm" />
-          <button className="lang-toggle" onClick={toggleLang} title="Cambiar idioma">
+          <button className="ap-btn ap-btn--ghost ap-btn--sm lang-toggle" onClick={toggleLang} title="Cambiar idioma">
             {lang === "es" ? "🇺🇸 EN" : "🇪🇸 ES"}
           </button>
-          <button className="download-btn" onClick={clearChat} disabled={busy || messages.length === 0}>
+          <button className="ap-btn ap-btn--secondary ap-btn--sm download-btn" onClick={clearChat} disabled={busy || messages.length === 0}>
             {lang === "en" ? "Clear" : "Limpiar"}
           </button>
         </div>

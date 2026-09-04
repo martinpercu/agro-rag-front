@@ -372,7 +372,7 @@ export default function DevPage() {
               <>
                 <span className="text-small text-muted">{userEmail}</span>
                 <button
-                  className="lang-toggle"
+                  className="ap-btn ap-btn--ghost ap-btn--sm lang-toggle"
                   onClick={async () => {
                     if (supabase) await supabase.auth.signOut();
                     setUserEmail(null);
@@ -382,16 +382,16 @@ export default function DevPage() {
                 </button>
               </>
             ) : (
-              <a href="/login" className="lang-toggle no-underline">
+              <a href="/login" className="ap-btn ap-btn--ghost ap-btn--sm lang-toggle no-underline">
                 Entrar
               </a>
             )
           ) : null}
           <ThemeToggle variant="ghost" size="sm" />
-          <button className="lang-toggle" onClick={toggleLang}>
+          <button className="ap-btn ap-btn--ghost ap-btn--sm lang-toggle" onClick={toggleLang}>
             {lang === "es" ? "🇺🇸 EN" : "🇪🇸 ES"}
           </button>
-          <button className="download-btn" onClick={clearHistories} disabled={busy}>
+          <button className="ap-btn ap-btn--secondary ap-btn--sm download-btn" onClick={clearHistories} disabled={busy}>
             {t.limpiar}
           </button>
         </div>
@@ -413,21 +413,21 @@ export default function DevPage() {
       </div>
 
       <form
-        className="composer"
+        className="composer ap-composer"
         onSubmit={(e) => {
           e.preventDefault();
           send(input);
         }}
       >
         <div className="k-row">
-          <div className="k-control temp-control">
-            <span className="k-label">T°</span>
-            <span className="k-value">{temperature.toFixed(1)}</span>
+          <div className="k-control ap-k-control temp-control">
+            <span className="k-label ap-k-label">T°</span>
+            <span className="k-value ap-k-value">{temperature.toFixed(1)}</span>
             <div className="k-slider-wrap">
               <span className="k-min">0</span>
               <input
                 type="range"
-                className="k-slider"
+                className="k-slider ap-slider"
                 min={0}
                 max={1}
                 step={0.1}
@@ -439,14 +439,14 @@ export default function DevPage() {
             </div>
           </div>
           <div className={`k-desc ${k !== 1 ? "invisible" : "visible"}`}>{t.kMin}</div>
-          <div className="k-control">
-            <span className="k-label">K</span>
-            <span className="k-value">{k}</span>
+          <div className="k-control ap-k-control">
+            <span className="k-label ap-k-label">K</span>
+            <span className="k-value ap-k-value">{k}</span>
             <div className="k-slider-wrap">
               <span className="k-min">1</span>
               <input
                 type="range"
-                className="k-slider"
+                className="k-slider ap-slider"
                 min={1}
                 max={16}
                 value={k}
@@ -458,7 +458,7 @@ export default function DevPage() {
           </div>
           <div className={`k-desc ${k !== 16 ? "invisible" : "visible"}`}>{t.kMax}</div>
           <div className="branch-inputs">
-            <label className="branch-field">
+            <label className="branch-field ap-branch-field">
               <span>Sem-BM25</span>
               <input
                 type="number"
@@ -470,7 +470,7 @@ export default function DevPage() {
                 }
               />
             </label>
-            <label className="branch-field">
+            <label className="branch-field ap-branch-field">
               <span>Lex-BM25</span>
               <input
                 type="number"
@@ -485,7 +485,7 @@ export default function DevPage() {
           </div>
         </div>
 
-        <div className="composer-inner">
+        <div className="composer-inner ap-composer__inner">
           <textarea
             rows={2}
             placeholder={t.placeholder}
@@ -498,8 +498,9 @@ export default function DevPage() {
               }
             }}
             disabled={busy}
+            className="ap-textarea"
           />
-          <button type="submit" disabled={busy || !input.trim()}>
+          <button type="submit" disabled={busy || !input.trim()} className="ap-btn ap-btn--primary">
             {busy ? t.procesando : t.enviar}
           </button>
         </div>
