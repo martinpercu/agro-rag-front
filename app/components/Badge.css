@@ -1,0 +1,107 @@
+/* ==========================================================================
+   components/Badge.css — Agroposta
+   Badges, pills, intent, metric-chip, docnum. Ver guidelines.md §4.2
+   ========================================================================== */
+
+.ap-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-small);
+  font-weight: var(--font-weight-medium);
+  line-height: 1;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+/* Intent — uppercase micro sobre brand-soft */
+.ap-badge--intent {
+  font-size: var(--text-micro);
+  letter-spacing: var(--tracking-micro);
+  text-transform: uppercase;
+  font-weight: var(--font-weight-bold);
+  background: var(--brand-soft);
+  color: var(--brand-hover);
+  border-color: var(--brand-border);
+}
+
+/* Edition — trigo */
+.ap-badge--edition {
+  font-family: var(--font-technical);
+  font-size: var(--text-micro);
+  letter-spacing: var(--tracking-technical);
+  background: var(--wheat-soft);
+  color: var(--soil);
+  border-color: var(--wheat-border);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Metric chip — mono tabular */
+.ap-badge--metric,
+.metric-chip {
+  font-family: var(--font-technical);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  background: var(--bg-muted);
+  color: var(--text-muted);
+  border-color: var(--border-subtle);
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+/* Status */
+.ap-badge--success { background: var(--success-bg); color: var(--success); border-color: var(--success-border); }
+.ap-badge--warning { background: var(--warning-bg); color: var(--warning); border-color: var(--warning-border); }
+.ap-badge--error   { background: var(--error-bg); color: var(--error); border-color: var(--error-border); }
+.ap-badge--info    { background: var(--info-bg); color: var(--info); border-color: var(--info-border); }
+.ap-badge--neutral { background: var(--bg-muted); color: var(--text-secondary); border-color: var(--border-subtle); }
+
+/* Dot */
+.ap-badge__dot {
+  width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0;
+}
+.ap-badge__dot--live { animation: ap-pulse 1.6s ease-in-out infinite; }
+@keyframes ap-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.45; } }
+
+/* Sizes */
+.ap-badge--sm { font-size: 10px; padding: 2px 6px; }
+.ap-badge--lg { font-size: 12px; padding: 4px 10px; }
+
+/* Docnum — page · edition · chunk */
+.docnum,
+.ap-docnum {
+  font-family: var(--font-technical);
+  font-size: var(--text-technical);
+  letter-spacing: var(--tracking-technical);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-tertiary);
+  font-weight: var(--font-weight-medium);
+}
+.ap-docnum strong { color: var(--text-secondary); font-weight: var(--font-weight-bold); }
+
+/* Pill group */
+.ap-pill-group { display: inline-flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+
+/* Toggle pill (ON/OFF para strategies) — compat con strategy-toggle */
+.ap-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: #E5EAE7;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--duration-base) var(--ease-default);
+}
+.ap-toggle.is-on { background: var(--brand); color: var(--text-on-brand); border-color: var(--brand); }
+.ap-toggle:hover:not(.is-on) { background: #D0DAD4; }
+.dark .ap-toggle { background: #283830; }
+.dark .ap-toggle.is-on { background: var(--brand); }
