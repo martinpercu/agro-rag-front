@@ -2,8 +2,8 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { StrategyCard, type CardState } from "../../components/StrategyCard";
-import { supabase, isSupabaseConfigured } from "../../lib/supabase";
 import { ThemeToggle } from "../../components/ThemeToggle";
+import { useAgroSession, getAuthHeader } from "../../hooks/use-agro-session";
 
 type Lang = "es" | "en";
 
@@ -93,7 +93,7 @@ export default function DevPage() {
   const [lexBm25, setLexBm25] = useState(20);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const { userEmail, isConfigured, signOut } = useAgroSession();
 
   const busyRef = useRef(false);
   const t = TEXTS[lang];
@@ -108,14 +108,6 @@ export default function DevPage() {
     setSemBm25(readStoredNumber("agroposta_sem_bm25", 20, 1, 40));
     setLexBm25(readStoredNumber("agroposta_lex_bm25", 20, 1, 40));
     hydratedRef.current = true;
-    // Supabase auth
-    if (isSupabaseConfigured() && supabase) {
-      supabase.auth.getSession().then(({ data }) => {
-        setUserEmail(data.session?.user?.email ?? null);
-      });
-      const { data: sub } = supabase.auth.onAuthStateChange((_e, sess) => setUserEmail(sess?.user?.email ?? null));
-      return () => sub.subscription.unsubscribe();
-    }
   }, []);
 
   // Keep in sync if another tab or dashboard changes the values
@@ -207,12 +199,8 @@ export default function DevPage() {
 
     const abortController = new AbortController();
 
-    // Optional Supabase JWT — backend /me etc require it, compare/stream still open (Phase 0)
-    let authHeader: Record<string, string> = {};
-    if (isSupabaseConfigured() && supabase) {
-      const { data } = await supabase.auth.getSession();
-      if (data.session?.access_token) authHeader = { Authorization: `Bearer ${data.session.access_token}` };
-    }
+    // Optional Supabase JWT — centralizado via hook
+    const authHeader = await getAuthHeader();
 
     try {
       const res = await fetch(`/api/proxy/compare/stream`, {
@@ -367,16 +355,13 @@ export default function DevPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {isSupabaseConfigured() ? (
+          {isConfigured ? (
             userEmail ? (
               <>
                 <span className="text-small text-muted">{userEmail}</span>
                 <button
                   className="ap-btn ap-btn--ghost ap-btn--sm lang-toggle"
-                  onClick={async () => {
-                    if (supabase) await supabase.auth.signOut();
-                    setUserEmail(null);
-                  }}
+                  onClick={signOut}
                 >
                   Salir
                 </button>

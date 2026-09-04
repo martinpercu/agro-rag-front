@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { supabase, isSupabaseConfigured } from "../lib/supabase";
 import { MessageList, type ChatMessage } from "../components/MessageList";
 import { Composer } from "../components/Composer";
 import { ThemeToggle } from "../components/ThemeToggle";
+import { getAuthHeader } from "../hooks/use-agro-session";
 
 type Lang = "es" | "en";
 
@@ -139,19 +139,7 @@ export default function DashboardPage() {
       content: m.content,
     }));
 
-    let authHeader: Record<string, string> = {};
-    if (isSupabaseConfigured() && supabase) {
-      try {
-        const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise<{ data: { session: null } }>((resolve) =>
-          setTimeout(() => resolve({ data: { session: null } }), 800)
-        );
-        const { data } = (await Promise.race([sessionPromise, timeoutPromise])) as Awaited<typeof sessionPromise>;
-        if ((data as unknown as { session?: { access_token?: string } })?.session?.access_token) {
-          authHeader = { Authorization: `Bearer ${(data as unknown as { session: { access_token: string } }).session.access_token}` };
-        }
-      } catch {}
-    }
+    const authHeader = await getAuthHeader();
 
     try {
       const res = await fetch(`/api/proxy/compare/stream`, {
@@ -280,11 +268,7 @@ export default function DashboardPage() {
               planIntent = !!pj.plan_intent;
             }
           } catch {}
-          let saveAuthHeader: Record<string, string> = {};
-          if (isSupabaseConfigured() && supabase) {
-            const { data } = await supabase.auth.getSession();
-            if (data.session?.access_token) saveAuthHeader = { Authorization: `Bearer ${data.session.access_token}` };
-          }
+          const saveAuthHeader = await getAuthHeader();
           await fetch("/api/proxy/investigations", {
             method: "POST",
             headers: { "Content-Type": "application/json", ...saveAuthHeader },
