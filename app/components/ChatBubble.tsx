@@ -1,5 +1,8 @@
 "use client";
 
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+
 type Source = {
   pagina: number;
   seccion: string;
@@ -39,7 +42,7 @@ export function ChatBubble({
   if (isUser) {
     return (
       <div className="bubble-row user">
-        <div className="bubble user">
+        <div className="ap-bubble ap-bubble--user bubble user">
           <div className="bubble-text">{content}</div>
         </div>
       </div>
@@ -48,10 +51,10 @@ export function ChatBubble({
 
   return (
     <div className="bubble-row assistant">
-      <div className="bubble assistant">
-        {intent && <span className="bubble-intent">{intent}</span>}
-        <div className="bubble-text">
-          {content}
+      <div className={`ap-bubble ap-bubble--assistant bubble assistant ${trace || sources ? "" : ""}`}>
+        {intent && <span className="ap-badge--intent bubble-intent">{intent}</span>}
+        <div className="bubble-text markdown-content">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
           {streaming && <span className="cursor-blink">▌</span>}
         </div>
         {sources && sources.length > 0 && (

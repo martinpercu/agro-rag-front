@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase, isSupabaseConfigured } from "../lib/supabase";
+import { MessageSquare, FlaskConical, ClipboardList, TestTube, Pin, Bell, Sprout } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useIconSize } from "../hooks/use-icon-size";
 
 type Investigation = {
   id: string;
@@ -18,6 +21,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [investigations, setInvestigations] = useState<Investigation[]>([]);
   const [investigationsLoading, setInvestigationsLoading] = useState(false);
+  const iconBtn = useIconSize("button");
 
   useEffect(() => {
     if (isSupabaseConfigured() && supabase) {
@@ -71,19 +75,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Left sidebar 280 */}
       <aside className="dashboard-sidebar">
         <div className="sidebar-top">
-          <Link href="/" className="sidebar-logo">
-            <span className="sidebar-logo-mark">◉</span> Agroposta
+          <Link href="/" className="sidebar-logo flex items-center gap-2">
+            <span className="sidebar-logo-mark flex items-center justify-center rounded-lg bg-brand text-white w-7 h-7">
+              <Sprout size={16} strokeWidth={1.7} />
+            </span>
+            Agroposta
           </Link>
           <span className="sidebar-edition">2026/05</span>
         </div>
 
         <nav className="sidebar-nav">
           <Link href="/" className="sidebar-link active">
-            <span className="sidebar-link-icon">💬</span> Chat
+            <span className="sidebar-link-icon flex items-center justify-center">
+              <MessageSquare size={iconBtn} strokeWidth={1.5} />
+            </span>{" "}
+            Chat
           </Link>
           <div className="sidebar-section">
             <div className="sidebar-section-title">
-              <span className="sidebar-link-icon">🔬</span> Mis investigadas
+              <span className="sidebar-link-icon flex items-center justify-center">
+                <FlaskConical size={14} strokeWidth={1.5} />
+              </span>{" "}
+              Mis investigadas
               <span className="sidebar-badge">{investigationsLoading ? "…" : investigations.length}</span>
             </div>
             {investigations.length === 0 ? (
@@ -110,11 +123,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             )}
           </div>
           <a className="sidebar-link muted" title="Próximamente — Fase 2">
-            <span className="sidebar-link-icon">📋</span> Mis planes
+            <span className="sidebar-link-icon flex items-center justify-center">
+              <ClipboardList size={iconBtn} strokeWidth={1.5} />
+            </span>{" "}
+            Mis planes
             <span className="sidebar-badge">pronto</span>
           </a>
           <Link href="/dev" className="sidebar-link">
-            <span className="sidebar-link-icon">🧪</span> Lab /dev
+            <span className="sidebar-link-icon flex items-center justify-center">
+              <TestTube size={iconBtn} strokeWidth={1.5} />
+            </span>{" "}
+            Lab /dev
             <span className="sidebar-badge lab">lab</span>
           </Link>
         </nav>
@@ -153,8 +172,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Center 760 */}
       <main className="dashboard-center">{children}</main>
 
-      {/* Right 56 → 340 */}
-      <aside className={`dashboard-right ${rightOpen ? "open" : "collapsed"}`}>
+      {/* Right 56 → 340 — motion width como Odoo pinned-sidebar */}
+      <motion.aside
+        className={`dashboard-right ${rightOpen ? "open" : "collapsed"}`}
+        animate={{ width: rightOpen ? 340 : 56 }}
+        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+        style={{ width: rightOpen ? 340 : 56 }}
+      >
         <div className="right-icons">
           <button
             className="right-icon-btn"
@@ -162,7 +186,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             onClick={() => setRightOpen((v) => !v)}
             aria-label="Toggle pins"
           >
-            📌
+            <Pin size={18} strokeWidth={1.5} />
           </button>
           <button
             className="right-icon-btn"
@@ -170,46 +194,54 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             onClick={() => setRightOpen((v) => !v)}
             aria-label="Toggle notifications"
           >
-            🔔
+            <Bell size={18} strokeWidth={1.5} />
           </button>
         </div>
-        {rightOpen && (
-          <div className="right-panel-content">
-            <div className="right-panel-header">
-              <strong>Pins &amp; notificaciones</strong>
-              <button className="right-close" onClick={() => setRightOpen(false)}>
-                ✕
-              </button>
-            </div>
-            {investigations.length === 0 ? (
-              <div className="right-panel-empty">
-                Aún no hay pins. Cuando guardes una investigada aparecerá acá.
-                <br />
-                <br />
-                <span className="text-small text-muted">
-                  Fase 0: se guarda sutil con precio/ubicación opcional.
-                </span>
+        <AnimatePresence>
+          {rightOpen && (
+            <motion.div
+              initial={{ opacity: 0, x: 12 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 12 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="right-panel-content"
+            >
+              <div className="right-panel-header">
+                <strong>Pins &amp; notificaciones</strong>
+                <button className="right-close" onClick={() => setRightOpen(false)}>
+                  ✕
+                </button>
               </div>
-            ) : (
-              <div className="right-panel-list">
-                {investigations.slice(0, 8).map((inv) => (
-                  <div key={inv.id} className="right-panel-item">
-                    <div className="right-panel-item-query">{inv.query || "(sin query)"}</div>
-                    {inv.divisions && inv.divisions.length > 0 && (
-                      <div className="right-panel-item-divisions text-small text-muted mt-1">
-                        {inv.divisions.map((d) => `${d.hectares}ha${d.cultivo ? ` ${d.cultivo}` : ""}`).join(" · ")}
+              {investigations.length === 0 ? (
+                <div className="right-panel-empty">
+                  Aún no hay pins. Cuando guardes una investigada aparecerá acá.
+                  <br />
+                  <br />
+                  <span className="text-small text-muted">
+                    Fase 0: se guarda sutil con precio/ubicación opcional.
+                  </span>
+                </div>
+              ) : (
+                <div className="right-panel-list">
+                  {investigations.slice(0, 8).map((inv) => (
+                    <div key={inv.id} className="right-panel-item">
+                      <div className="right-panel-item-query">{inv.query || "(sin query)"}</div>
+                      {inv.divisions && inv.divisions.length > 0 && (
+                        <div className="right-panel-item-divisions text-small text-muted mt-1">
+                          {inv.divisions.map((d) => `${d.hectares}ha${d.cultivo ? ` ${d.cultivo}` : ""}`).join(" · ")}
+                        </div>
+                      )}
+                      <div className="right-panel-item-meta">
+                        {inv.edition_id} · {inv.created_at ? new Date(inv.created_at).toLocaleDateString("es-AR") : ""}
                       </div>
-                    )}
-                    <div className="right-panel-item-meta">
-                      {inv.edition_id} · {inv.created_at ? new Date(inv.created_at).toLocaleDateString("es-AR") : ""}
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </aside>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.aside>
     </div>
   );
 }

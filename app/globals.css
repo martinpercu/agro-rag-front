@@ -447,6 +447,114 @@ html, body {
 .text-brand { color: var(--brand); }
 .text-muted { color: var(--text-muted); }
 
+/* Markdown content — para ChatBubble (port Odoo globals.css:320) */
+.markdown-content {
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+.markdown-content > *:first-child { margin-top: 0; }
+.markdown-content > *:last-child { margin-bottom: 0; }
+.markdown-content h1 {
+  font-size: 20px;
+  font-weight: var(--font-weight-bold);
+  line-height: 1.2;
+  margin: 14px 0 8px;
+  letter-spacing: var(--tracking-title);
+}
+.markdown-content h2 {
+  font-size: 16px;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.35;
+  margin: 12px 0 6px;
+}
+.markdown-content h3 {
+  font-size: 14px;
+  font-weight: var(--font-weight-semibold);
+  margin: 10px 0 6px;
+}
+.markdown-content p {
+  margin: 6px 0;
+}
+.markdown-content ul,
+.markdown-content ol {
+  margin: 6px 0;
+  padding-left: 20px;
+}
+.markdown-content li { margin: 2px 0; }
+.markdown-content li::marker { color: var(--text-tertiary); }
+.markdown-content a {
+  color: var(--brand);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.markdown-content a:hover { color: var(--brand-hover); }
+.markdown-content code {
+  font-family: var(--font-technical);
+  font-size: 12px;
+  background: var(--bg-muted);
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border-subtle);
+}
+.markdown-content pre {
+  margin: 8px 0;
+  padding: 12px;
+  background: var(--bg-deep);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  overflow-x: auto;
+  font-family: var(--font-technical);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.markdown-content pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+}
+.markdown-content blockquote {
+  margin: 8px 0;
+  padding: 6px 12px;
+  border-left: 3px solid var(--brand-200);
+  background: var(--brand-subtle);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  color: var(--text-secondary);
+}
+.markdown-content table {
+  width: 100%;
+  margin: 10px 0;
+  border-collapse: collapse;
+  font-size: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.markdown-content th {
+  background: var(--bg-muted);
+  font-weight: var(--font-weight-semibold);
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: var(--text-micro);
+  letter-spacing: var(--tracking-micro);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+.markdown-content td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.markdown-content tr:last-child td { border-bottom: none; }
+.markdown-content tr:hover td { background: var(--bg-subtle); }
+.markdown-content hr {
+  margin: 12px 0;
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+}
+
 /* Deep surface — para logs, trace, panels hundidos (como Odoo .deep-surface) */
 .deep-surface {
   background: var(--bg-deep);
