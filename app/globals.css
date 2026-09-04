@@ -456,6 +456,9 @@ html, body {
 }
 
 
+/* --------------------------------------------------------------------------
+   6. Scrollbar — sutil, no protagonista
+   -------------------------------------------------------------------------- */
 * { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -467,8 +470,11 @@ html, body {
 ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 ::-webkit-scrollbar-corner { background: transparent; }
 
+/* --------------------------------------------------------------------------
+   7. Focus — anillo verde visible (a11y)
    -------------------------------------------------------------------------- */
-:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+:where(a, button, input, textarea, select):focus-visible,
+:where([tabindex]):focus-visible {
   outline: none;
   border-color: var(--focus-border);
   box-shadow: var(--focus-ring);
@@ -479,7 +485,9 @@ html, body {
 /* Fallback para navegación con mouse: sin anillo si no es keyboard */
 :where(a, button):focus:not(:focus-visible) { box-shadow: none; }
 
-
+/* --------------------------------------------------------------------------
+   8. Motion — respeta prefers-reduced-motion
+   -------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -498,6 +506,9 @@ html, body {
     opacity var(--duration-base) var(--ease-default);
 }
 
+/* --------------------------------------------------------------------------
+   9. Selection
+   -------------------------------------------------------------------------- */
 ::selection {
   background: var(--brand-soft);
   color: var(--text-primary);
@@ -507,7 +518,10 @@ html, body {
   color: var(--text-primary);
 }
 
-
+/* --------------------------------------------------------------------------
+   10. Compat shims — para que el front actual no se rompa al portar tokens
+   Mantener hasta que guidelines.md se aplique y se renombren usos sueltos.
+   -------------------------------------------------------------------------- */
 :root {
   /* Aliases ya definidos arriba, solo asegurar que existan para código viejo */
   --muted: var(--text-muted);
