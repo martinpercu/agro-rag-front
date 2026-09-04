@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase, isSupabaseConfigured } from "../lib/supabase";
 import { MessageList, type ChatMessage } from "../components/MessageList";
 import { Composer } from "../components/Composer";
+import { ThemeToggle } from "../components/ThemeToggle";
 
 type Lang = "es" | "en";
 
@@ -324,7 +325,7 @@ export default function DashboardPage() {
             {lang === "en" ? "Margenes 2026/05 · baseline" : "Márgenes 2026/05 · baseline"} · k={k} T={temperature.toFixed(1)} · Sem{semBm25} Lex{lexBm25}
             <a
               href="/dev"
-              style={{ marginLeft: 8, color: "var(--accent)", textDecoration: "underline", fontSize: 11 }}
+              className="ml-2 text-[11px] text-brand underline underline-offset-2 hover:text-brand-hover"
               title="Editar k/temp en /dev"
             >
               {lang === "en" ? "(edit in /dev)" : "(editar en /dev)"}
@@ -332,6 +333,7 @@ export default function DashboardPage() {
           </span>
         </div>
         <div className="chat-header-right">
+          <ThemeToggle variant="ghost" size="sm" />
           <button className="lang-toggle" onClick={toggleLang} title="Cambiar idioma">
             {lang === "es" ? "🇺🇸 EN" : "🇪🇸 ES"}
           </button>

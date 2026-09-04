@@ -96,12 +96,12 @@
   padding: 3px 10px;
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
-  background: #E5EAE7;
+  background: var(--bg-muted);
   color: var(--text-muted);
   cursor: pointer;
   transition: all var(--duration-base) var(--ease-default);
 }
 .ap-toggle.is-on { background: var(--brand); color: var(--text-on-brand); border-color: var(--brand); }
-.ap-toggle:hover:not(.is-on) { background: #D0DAD4; }
-.dark .ap-toggle { background: #283830; }
+.ap-toggle:hover:not(.is-on) { background: var(--bg-subtle); }
+.dark .ap-toggle { background: var(--bg-muted); }
 .dark .ap-toggle.is-on { background: var(--brand); }

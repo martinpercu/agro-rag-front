@@ -78,7 +78,7 @@
 
 .ap-btn--destructive {
   --btn-bg: var(--error);
-  --btn-fg: #fff;
+  --btn-fg: var(--text-on-brand);
   --btn-border: var(--error);
 }
 .ap-btn--destructive:hover:not(:disabled) { --btn-bg: #7A1A1E; --btn-border: #7A1A1E; }

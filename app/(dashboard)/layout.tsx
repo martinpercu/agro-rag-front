@@ -67,7 +67,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [userEmail]);
 
   return (
-    <div className="dashboard-root">
+    <div className="dashboard-root client">
       {/* Left sidebar 280 */}
       <aside className="dashboard-sidebar">
         <div className="sidebar-top">
@@ -94,7 +94,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <div key={inv.id} className="sidebar-investigation-item" title={inv.query || ""}>
                     <span className="sidebar-investigation-query">{inv.query || "(sin query)"}</span>
                     {inv.divisions && inv.divisions.length > 0 && (
-                      <span className="sidebar-investigation-divisions" style={{ fontSize: 11, opacity: 0.85, display: "block", marginTop: 2 }}>
+                      <span className="sidebar-investigation-divisions docnum block mt-0.5">
                         {inv.divisions.map((d) => `${d.hectares}ha${d.cultivo ? ` ${d.cultivo}` : ""}`).join(" · ")}
                       </span>
                     )}
@@ -186,7 +186,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 Aún no hay pins. Cuando guardes una investigada aparecerá acá.
                 <br />
                 <br />
-                <span style={{ opacity: 0.6, fontSize: 12 }}>
+                <span className="text-small text-muted">
                   Fase 0: se guarda sutil con precio/ubicación opcional.
                 </span>
               </div>
@@ -196,7 +196,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <div key={inv.id} className="right-panel-item">
                     <div className="right-panel-item-query">{inv.query || "(sin query)"}</div>
                     {inv.divisions && inv.divisions.length > 0 && (
-                      <div className="right-panel-item-divisions" style={{ fontSize: 12, opacity: 0.8, marginTop: 4 }}>
+                      <div className="right-panel-item-divisions text-small text-muted mt-1">
                         {inv.divisions.map((d) => `${d.hectares}ha${d.cultivo ? ` ${d.cultivo}` : ""}`).join(" · ")}
                       </div>
                     )}

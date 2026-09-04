@@ -78,9 +78,7 @@ export function MessageList({
           return (
             <div key={m.id} className="bubble-row assistant">
               <div className="bubble assistant error">
-                <div className="bubble-text" style={{ color: "var(--error)" }}>
-                  {m.error}
-                </div>
+                <div className="bubble-text text-error">{m.error}</div>
               </div>
             </div>
           );

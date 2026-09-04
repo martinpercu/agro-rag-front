@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { StrategyCard, type CardState } from "../../components/StrategyCard";
 import { supabase, isSupabaseConfigured } from "../../lib/supabase";
+import { ThemeToggle } from "../../components/ThemeToggle";
 
 type Lang = "es" | "en";
 
@@ -357,17 +358,19 @@ export default function DevPage() {
   }
 
   return (
-    <div className="layout-grid">
+    <div className="layout-grid builder">
       <header className="grid-header">
         <div>
           <h1>{t.title}</h1>
-          <div className="subtitle">{t.subtitle} — <a href="/" style={{ color: "var(--accent)", textDecoration: "underline" }}>ir al chat producto →</a></div>
+          <div className="subtitle">
+            {t.subtitle} — <a href="/" className="text-brand underline underline-offset-2 hover:text-brand-hover">ir al chat producto →</a>
+          </div>
         </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <div className="flex items-center gap-2">
           {isSupabaseConfigured() ? (
             userEmail ? (
               <>
-                <span style={{ fontSize: 12, opacity: 0.7 }}>{userEmail}</span>
+                <span className="text-small text-muted">{userEmail}</span>
                 <button
                   className="lang-toggle"
                   onClick={async () => {
@@ -379,11 +382,12 @@ export default function DevPage() {
                 </button>
               </>
             ) : (
-              <a href="/login" className="lang-toggle" style={{ textDecoration: "none" }}>
+              <a href="/login" className="lang-toggle no-underline">
                 Entrar
               </a>
             )
           ) : null}
+          <ThemeToggle variant="ghost" size="sm" />
           <button className="lang-toggle" onClick={toggleLang}>
             {lang === "es" ? "🇺🇸 EN" : "🇪🇸 ES"}
           </button>
@@ -434,12 +438,7 @@ export default function DevPage() {
               <span className="k-max">1</span>
             </div>
           </div>
-          <div
-            className="k-desc"
-            style={{ visibility: k !== 1 ? "hidden" : "visible" }}
-          >
-            {t.kMin}
-          </div>
+          <div className={`k-desc ${k !== 1 ? "invisible" : "visible"}`}>{t.kMin}</div>
           <div className="k-control">
             <span className="k-label">K</span>
             <span className="k-value">{k}</span>
@@ -457,12 +456,7 @@ export default function DevPage() {
               <span className="k-max">16</span>
             </div>
           </div>
-          <div
-            className="k-desc"
-            style={{ visibility: k !== 16 ? "hidden" : "visible" }}
-          >
-            {t.kMax}
-          </div>
+          <div className={`k-desc ${k !== 16 ? "invisible" : "visible"}`}>{t.kMax}</div>
           <div className="branch-inputs">
             <label className="branch-field">
               <span>Sem-BM25</span>
