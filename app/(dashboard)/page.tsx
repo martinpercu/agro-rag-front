@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { supabase, isSupabaseConfigured } from "../lib/supabase";
 import { MessageList, type ChatMessage } from "../components/MessageList";
 import { Composer } from "../components/Composer";
+import { ThemeToggle } from "../components/ThemeToggle";
+import { getAuthHeader } from "../hooks/use-agro-session";
+import { useTranslations } from "next-intl";
 
 type Lang = "es" | "en";
 
@@ -33,6 +35,7 @@ export default function DashboardPage() {
   const busyRef = useRef(false);
   const hydratedRef = useRef(false);
   const messagesRef = useRef<ChatMessage[]>([]);
+  const tChat = useTranslations("Chat");
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
@@ -105,6 +108,7 @@ export default function DashboardPage() {
     const next: Lang = lang === "es" ? "en" : "es";
     setLang(next);
     localStorage.setItem("agroposta_lang", next);
+    window.dispatchEvent(new Event("agroposta:lang-change"));
   }
 
   const clearChat = useCallback(() => {
@@ -138,19 +142,7 @@ export default function DashboardPage() {
       content: m.content,
     }));
 
-    let authHeader: Record<string, string> = {};
-    if (isSupabaseConfigured() && supabase) {
-      try {
-        const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise<{ data: { session: null } }>((resolve) =>
-          setTimeout(() => resolve({ data: { session: null } }), 800)
-        );
-        const { data } = (await Promise.race([sessionPromise, timeoutPromise])) as Awaited<typeof sessionPromise>;
-        if ((data as unknown as { session?: { access_token?: string } })?.session?.access_token) {
-          authHeader = { Authorization: `Bearer ${(data as unknown as { session: { access_token: string } }).session.access_token}` };
-        }
-      } catch {}
-    }
+    const authHeader = await getAuthHeader();
 
     try {
       const res = await fetch(`/api/proxy/compare/stream`, {
@@ -279,11 +271,7 @@ export default function DashboardPage() {
               planIntent = !!pj.plan_intent;
             }
           } catch {}
-          let saveAuthHeader: Record<string, string> = {};
-          if (isSupabaseConfigured() && supabase) {
-            const { data } = await supabase.auth.getSession();
-            if (data.session?.access_token) saveAuthHeader = { Authorization: `Bearer ${data.session.access_token}` };
-          }
+          const saveAuthHeader = await getAuthHeader();
           await fetch("/api/proxy/investigations", {
             method: "POST",
             headers: { "Content-Type": "application/json", ...saveAuthHeader },
@@ -319,24 +307,25 @@ export default function DashboardPage() {
     <div className="dashboard-chat">
       <div className="dashboard-chat-header">
         <div className="chat-header-left">
-          <h1 className="chat-title">Chat</h1>
+          <h1 className="chat-title">{tChat("title")}</h1>
           <span className="chat-subtitle" suppressHydrationWarning>
-            {lang === "en" ? "Margenes 2026/05 · baseline" : "Márgenes 2026/05 · baseline"} · k={k} T={temperature.toFixed(1)} · Sem{semBm25} Lex{lexBm25}
+            {tChat("subtitle")} · k={k} T={temperature.toFixed(1)} · Sem{semBm25} Lex{lexBm25}
             <a
               href="/dev"
-              style={{ marginLeft: 8, color: "var(--accent)", textDecoration: "underline", fontSize: 11 }}
+              className="ml-2 text-[11px] text-brand underline underline-offset-2 hover:text-brand-hover"
               title="Editar k/temp en /dev"
             >
-              {lang === "en" ? "(edit in /dev)" : "(editar en /dev)"}
+              {tChat("editInDev")}
             </a>
           </span>
         </div>
         <div className="chat-header-right">
-          <button className="lang-toggle" onClick={toggleLang} title="Cambiar idioma">
+          <ThemeToggle variant="ghost" size="sm" />
+          <button className="ap-btn ap-btn--ghost ap-btn--sm lang-toggle" onClick={toggleLang} title="Cambiar idioma">
             {lang === "es" ? "🇺🇸 EN" : "🇪🇸 ES"}
           </button>
-          <button className="download-btn" onClick={clearChat} disabled={busy || messages.length === 0}>
-            {lang === "en" ? "Clear" : "Limpiar"}
+          <button className="ap-btn ap-btn--secondary ap-btn--sm download-btn" onClick={clearChat} disabled={busy || messages.length === 0}>
+            {tChat("clear")}
           </button>
         </div>
       </div>

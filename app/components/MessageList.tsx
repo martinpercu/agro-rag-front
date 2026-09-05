@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { ChatBubble } from "./ChatBubble";
 
 type Source = {
@@ -42,6 +44,7 @@ export function MessageList({
 }) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const t = useTranslations("MessageList");
 
   useEffect(() => {
     const isStreaming = messages.some((m) => m.streaming);
@@ -51,19 +54,13 @@ export function MessageList({
   if (messages.length === 0) {
     return (
       <div className="message-list empty">
-        <div className="empty-state">
-          <div className="empty-title">
-            {lang === "en" ? "What do you want to investigate?" : "¿Qué querés investigar?"}
-          </div>
-          <div className="empty-subtitle">
-            {lang === "en"
-              ? "Ask about costs, margins or crops from Márgenes Agropecuarios. The answer cites page + edition."
-              : "Preguntá sobre costos, márgenes o cultivos de Márgenes Agropecuarios. La respuesta cita página y edición."}
-          </div>
-          <div className="empty-examples">
-            <span className="empty-chip">“margen maíz 80ha Pergamino”</span>
-            <span className="empty-chip">“¿qué variedad de soja rinde más en 2026/05?”</span>
-            <span className="empty-chip">“coste gasoil por ha”</span>
+        <div className="ap-card empty-state p-6 text-center max-w-[520px] mx-auto">
+          <div className="empty-title">{t("what")}</div>
+          <div className="empty-subtitle">{t("subtitle")}</div>
+          <div className="empty-examples flex flex-wrap gap-2 justify-center mt-3">
+            <span className="ap-badge ap-badge--neutral empty-chip">“margen maíz 80ha Pergamino”</span>
+            <span className="ap-badge ap-badge--neutral empty-chip">“¿qué variedad de soja rinde más en 2026/05?”</span>
+            <span className="ap-badge ap-badge--neutral empty-chip">“coste gasoil por ha”</span>
           </div>
           {emptyHint && <div className="empty-hint">{emptyHint}</div>}
         </div>
@@ -73,31 +70,45 @@ export function MessageList({
 
   return (
     <div ref={containerRef} className="message-list">
-      {messages.map((m) => {
-        if (m.error) {
-          return (
-            <div key={m.id} className="bubble-row assistant">
-              <div className="bubble assistant error">
-                <div className="bubble-text" style={{ color: "var(--error)" }}>
-                  {m.error}
+      <AnimatePresence initial={false}>
+        {messages.map((m) => {
+          if (m.error) {
+            return (
+              <motion.div
+                key={m.id}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
+                className="bubble-row assistant"
+              >
+                <div className="ap-bubble ap-bubble--assistant is-error bubble assistant error">
+                  <div className="bubble-text text-error">{m.error}</div>
                 </div>
-              </div>
-            </div>
+              </motion.div>
+            );
+          }
+          return (
+            <motion.div
+              key={m.id}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
+            >
+              <ChatBubble
+                role={m.role}
+                content={m.content}
+                streaming={m.streaming}
+                intent={m.intent}
+                sources={m.sources}
+                trace={m.trace}
+                lang={lang}
+              />
+            </motion.div>
           );
-        }
-        return (
-          <ChatBubble
-            key={m.id}
-            role={m.role}
-            content={m.content}
-            streaming={m.streaming}
-            intent={m.intent}
-            sources={m.sources}
-            trace={m.trace}
-            lang={lang}
-          />
-        );
-      })}
+        })}
+      </AnimatePresence>
       <div ref={bottomRef} />
     </div>
   );

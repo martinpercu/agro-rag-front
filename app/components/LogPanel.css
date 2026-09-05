@@ -66,7 +66,7 @@
   text-align: right;
 }
 .ap-trace-ms { color: var(--text-muted); }
-.ap-trace-acc { color: #9AB0A6; }
+.ap-trace-acc { color: var(--text-tertiary); }
 .ap-trace-detail {
   grid-column: 1 / -1;
   color: var(--text-tertiary);

@@ -1,6 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
+import { Send, Loader2 } from "lucide-react";
+import { useIconSize } from "../hooks/use-icon-size";
+import { useTranslations } from "next-intl";
 
 export function Composer({
   onSend,
@@ -14,6 +18,8 @@ export function Composer({
   placeholder?: string;
 }) {
   const [value, setValue] = useState("");
+  const iconBtn = useIconSize("button");
+  const t = useTranslations("Chat");
 
   function submit() {
     const trimmed = value.trim();
@@ -22,42 +28,60 @@ export function Composer({
     setValue("");
   }
 
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      submit();
+    }
+  }
+
+  // Auto-resize como Odoo chat-input 200px max (opcional, mejora UX)
+  function adjustHeight(el: HTMLTextAreaElement) {
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 120) + "px";
+  }
+
   return (
-    <form
-      className="dashboard-composer"
+    <motion.form
+      layout
+      transition={{ duration: 0.15, ease: "easeOut" }}
+      className="dashboard-composer ap-composer"
       onSubmit={(e) => {
         e.preventDefault();
         submit();
       }}
     >
-      <div className="dashboard-composer-inner">
+      <div className="dashboard-composer-inner ap-composer__inner">
         <textarea
           rows={2}
           value={value}
-          placeholder={
-            placeholder ??
-            (lang === "en"
-              ? "Ask about Margenes Agropecuarios… (Shift+Enter for newline)"
-              : "Preguntá sobre Márgenes Agropecuarios… (Shift+Enter para salto)")
-          }
-          onChange={(e) => setValue(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              submit();
-            }
+          placeholder={placeholder ?? t("askPlaceholder")}
+          onChange={(e) => {
+            setValue(e.target.value);
+            adjustHeight(e.target as HTMLTextAreaElement);
           }}
+          onKeyDown={handleKeyDown}
           disabled={disabled}
+          className="ap-textarea"
+          style={{ minHeight: 44, maxHeight: 120, resize: "none" } as React.CSSProperties}
         />
-        <button type="submit" disabled={disabled || !value.trim()}>
-          {disabled ? (lang === "en" ? "Thinking…" : "Pensando…") : lang === "en" ? "Send" : "Enviar"}
+        <button
+          type="submit"
+          disabled={disabled || !value.trim()}
+          className="ap-btn ap-btn--primary h-[44px] w-[44px] p-0 shrink-0"
+          aria-label={disabled ? t("thinking") : t("send")}
+          title={disabled ? t("thinking") : t("send")}
+        >
+          {disabled ? (
+            <Loader2 size={iconBtn} className="animate-spin" />
+          ) : value.trim() ? (
+            <Send size={iconBtn} strokeWidth={1.7} />
+          ) : (
+            <Send size={iconBtn} strokeWidth={1.5} className="opacity-60" />
+          )}
         </button>
       </div>
-      <div className="dashboard-composer-hint">
-        {lang === "en"
-          ? "Baseline only in prod · k/temp inherited from /dev · no location required"
-          : "Solo baseline en prod · k/temp heredados de /dev · ubicación opcional"}
-      </div>
-    </form>
+      <div className="dashboard-composer-hint">{t("baselineOnly")}</div>
+    </motion.form>
   );
 }

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter, Roboto_Mono } from "next/font/google";
 import "./globals.css";
+import { ThemeInitializer } from "./components/ThemeInitializer";
+import { I18nProvider } from "./components/I18nProvider";
 
 const sans = Inter({ subsets: ["latin"], variable: "--font-sans", weight: ["400", "500", "600", "700"] });
 const mono = Roboto_Mono({ subsets: ["latin"], variable: "--font-technical" });
@@ -12,8 +14,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es-AR" className={`${sans.variable} ${mono.variable}`}>
-      <body>{children}</body>
+    <html lang="es-AR" className={`${sans.variable} ${mono.variable}`} suppressHydrationWarning>
+      <body>
+        <ThemeInitializer />
+        <I18nProvider>{children}</I18nProvider>
+      </body>
     </html>
   );
 }

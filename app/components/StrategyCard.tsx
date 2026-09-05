@@ -1,31 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 type Lang = "es" | "en";
-
-const TEXTS: Record<Lang, Record<string, string>> = {
-  es: {
-    esperando: "Esperando una consulta...",
-    buscando: "Buscando información...",
-    tu: "Tú",
-    verFuentes: "Ver fuentes",
-    ocultarFuentes: "Ocultar fuentes",
-    verTrace: "Ver trace",
-    ocultarTrace: "Ocultar trace",
-    errorDesconocido: "Error desconocido",
-  },
-  en: {
-    esperando: "Waiting for a question...",
-    buscando: "Searching...",
-    tu: "You",
-    verFuentes: "View sources",
-    ocultarFuentes: "Hide sources",
-    verTrace: "View trace",
-    ocultarTrace: "Hide trace",
-    errorDesconocido: "Unknown error",
-  },
-};
 
 type Source = {
   pagina: number;
@@ -96,7 +74,7 @@ export function StrategyCard({
   const scrollRef = useRef<HTMLDivElement>(null);
   const meta = LABELS[name] || { label: { es: name, en: name }, tone: "neutral" };
   const label = meta.label[lang];
-  const t = TEXTS[lang];
+  const t = useTranslations("StrategyCard");
 
   useEffect(() => {
     if (isStreaming) {
@@ -107,17 +85,32 @@ export function StrategyCard({
     }
   }, [state.answer, history, isStreaming]);
 
+  // ap-* canónico + legacy alias para transición (globals.css mantiene alias)
+  const isStreamingCard = state.status === "streaming" || state.status === "retrieving";
+  const cardClasses = [
+    "ap-card",
+    `ap-card--tone-${meta.tone}`,
+    isStreamingCard ? "is-streaming" : "",
+    !enabled ? "is-disabled" : "",
+    state.status === "error" ? "is-error" : "",
+    // legacy aliases por compat (se pueden borrar en Fase B done)
+    `strategy-card tone-${meta.tone} status-${state.status}`,
+    !enabled ? "disabled" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <div className={`strategy-card tone-${meta.tone} status-${state.status}${enabled ? "" : " disabled"}`}>
-      <div className="strategy-card-header">
-        <div className="strategy-card-title">
+    <div className={cardClasses}>
+      <div className="ap-card__header strategy-card-header">
+        <div className="ap-card__title strategy-card-title">
           <span className="strategy-name">{label}</span>
           {state.intent && state.status === "done" && (
-            <span className="intent-badge">{state.intent}</span>
+            <span className="ap-badge--intent intent-badge">{state.intent}</span>
           )}
         </div>
         <button
-          className={`strategy-toggle${enabled ? " on" : ""}`}
+          className={`ap-toggle strategy-toggle ${enabled ? "is-on on" : ""}`}
           onClick={onToggle}
           title={enabled ? "Desactivar" : "Activar"}
         >
@@ -125,15 +118,15 @@ export function StrategyCard({
         </button>
       </div>
 
-      <div ref={scrollRef} className="strategy-card-body">
+      <div ref={scrollRef} className="ap-card__body strategy-card-body">
         {history.length === 0 && state.status === "idle" && (
-          <div className="strategy-empty">{t.esperando}</div>
+          <div className="ap-card__empty strategy-empty">{t("esperando")}</div>
         )}
 
         {history.map((msg, i) => (
           <div key={i} className={`strategy-msg ${msg.role}`}>
             <div className="strategy-msg-label">
-              {msg.role === "user" ? t.tu : label}
+              {msg.role === "user" ? t("tu") : label}
             </div>
             <div className="strategy-msg-text">{msg.content}</div>
           </div>
@@ -144,7 +137,7 @@ export function StrategyCard({
             <div className="strategy-msg-label">{label}</div>
             <div className="strategy-msg-text">
               <span className="spinner" />
-              {t.buscando}
+              {t("buscando")}
             </div>
           </div>
         )}
@@ -159,29 +152,29 @@ export function StrategyCard({
         {state.status === "error" && (
           <div className="strategy-msg assistant">
             <div className="strategy-msg-label">{label}</div>
-            <div className="strategy-msg-text strategy-error">{state.error || t.errorDesconocido}</div>
+            <div className="strategy-msg-text strategy-error">{state.error || t("errorDesconocido")}</div>
           </div>
         )}
       </div>
 
-      <div className="strategy-card-footer">
+      <div className="ap-card__footer strategy-card-footer">
         {state.status === "done" && (
-          <div className="strategy-metrics">
-            <span className="metric-chip">⏱ {Math.round(state.answererMs || 0)}ms</span>
-            <span className="metric-chip">📄 {state.numSources}/{state.distinctSources}</span>
-            <span className="metric-chip">🎟 {state.inputTokens}+{state.outputTokens}</span>
+          <div className="ap-card__metrics strategy-metrics">
+            <span className="ap-badge--metric metric-chip">⏱ {Math.round(state.answererMs || 0)}ms</span>
+            <span className="ap-badge--metric metric-chip">📄 {state.numSources}/{state.distinctSources}</span>
+            <span className="ap-badge--metric metric-chip">🎟 {state.inputTokens}+{state.outputTokens}</span>
           </div>
         )}
         {state.status === "done" && state.sources.length > 0 && (
           <>
             <button
-              className="card-toggle"
+              className="ap-btn ap-btn--ghost ap-btn--sm card-toggle"
               onClick={() => setExpanded(!expanded)}
             >
-              {expanded ? t.ocultarFuentes : t.verFuentes}
+              {expanded ? t("ocultarFuentes") : t("verFuentes")}
             </button>
             {expanded && (
-              <div className="card-sources">
+              <div className="ap-log ap-log--dashed card-sources">
                 {state.sources.slice(0, 6).map((s, j) => (
                   <ScoreBar key={j} source={s} maxScore={maxScore(state.sources)} />
                 ))}
@@ -192,21 +185,21 @@ export function StrategyCard({
       {state.status === "done" && state.trace && state.trace.length > 0 && (
           <>
             <button
-              className="card-toggle"
+              className="ap-btn ap-btn--ghost ap-btn--sm card-toggle"
               onClick={() => setTraceExpanded(!traceExpanded)}
             >
-              {traceExpanded ? t.ocultarTrace : t.verTrace}
+              {traceExpanded ? t("ocultarTrace") : t("verTrace")}
             </button>
             {traceExpanded && (
-              <div className="card-trace">
+              <div className="ap-log ap-log--dashed card-trace">
                 {state.trace.map((s, j) => (
-                  <div key={j} className="trace-item">
+                  <div key={j} className="ap-trace-item trace-item">
                     <div className="trace-row">
-                      <span className="trace-step">{s.step}</span>
-                      <span className="trace-ms">{Math.round(s.ms)}ms</span>
-                      <span className="trace-acc">acc {Math.round(s.acc_ms)}ms</span>
+                      <span className="ap-trace-step trace-step">{s.step}</span>
+                      <span className="ap-trace-ms trace-ms">{Math.round(s.ms)}ms</span>
+                      <span className="ap-trace-acc trace-acc">acc {Math.round(s.acc_ms)}ms</span>
                     </div>
-                    {s.detail && <div className="trace-detail">{s.detail}</div>}
+                    {s.detail && <div className="ap-trace-detail trace-detail">{s.detail}</div>}
                   </div>
                 ))}
               </div>
@@ -225,17 +218,17 @@ function maxScore(sources: Source[]): number {
 function ScoreBar({ source, maxScore }: { source: Source; maxScore: number }) {
   const pct = Math.round(((source.score ?? 0) / maxScore) * 100);
   return (
-    <div className="source-item">
+    <div className="ap-source source-item">
       <div className="source-score-row">
-        <span className="source-score-label">
+        <span className="ap-source__label source-score-label">
           pag. {source.pagina} · {source.seccion}
           {source.cultivo ? ` · ${source.cultivo}` : ""}
         </span>
-        <span className="source-score-value">{(source.score ?? 0).toFixed(3)}</span>
+        <span className="ap-source__value source-score-value">{(source.score ?? 0).toFixed(3)}</span>
       </div>
       <div
-        className="source-score-bar"
-        style={{ "--k-pct": `${pct}%` } as React.CSSProperties}
+        className="ap-source__bar source-score-bar"
+        style={{ "--k-pct": `${pct}%`, "--pct": `${pct}%` } as React.CSSProperties}
       />
     </div>
   );
