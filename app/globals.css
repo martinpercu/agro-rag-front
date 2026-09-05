@@ -6,6 +6,8 @@
 @import "./components/Table.css";
 @import "./components/LogPanel.css";
 
+/* LEGACY → ap-* canónico (A4): strategy-card → ap-card, k-control → ap-k-control, bubble → ap-bubble, etc. Legacy queda como alias 1 versión luego se borra. Ver PLAN §A4 */
+
 @theme inline {
   /* Surfaces */
   --color-bg: var(--bg-base);
@@ -1989,6 +1991,22 @@ html, body {
   border-radius: 10px;
   border: 1px dashed var(--border);
 }
+
+/* ------------------------------------------------------------------ */
+/* A4 — LEGACY aliases (deprecated, usar ap-* canónico)               */
+/* Mantener 1 versión como alias delgado, luego borrar legacy.        */
+/* Mapeo: .strategy-card → .ap-card, .strategy-card-header → .ap-card__header, */
+/* .k-control → .ap-k-control, .branch-field → .ap-branch-field,    */
+/* .bubble → .ap-bubble, .bubble-intent → .ap-badge--intent, etc.    */
+/* ------------------------------------------------------------------ */
+/* Alias delgado: legacy hereda de ap-* (no duplicar reglas, solo alias) */
+.strategy-card { /* deprecated, alias .ap-card */ }
+.strategy-card-header { /* alias .ap-card__header */ }
+.strategy-card-body { /* alias .ap-card__body */ }
+.strategy-card-footer { /* alias .ap-card__footer */ }
+.k-control { /* alias .ap-k-control */ }
+.branch-field { /* alias .ap-branch-field */ }
+.bubble { /* alias .ap-bubble */ }
 
 /* Responsive */
 @media (max-width: 1100px) {

@@ -62,8 +62,7 @@ export function Composer({
           }}
           onKeyDown={handleKeyDown}
           disabled={disabled}
-          className="ap-textarea"
-          style={{ minHeight: 44, maxHeight: 120, resize: "none" } as React.CSSProperties}
+          className="ap-textarea min-h-[44px] max-h-[120px] resize-none"
         />
         <button
           type="submit"

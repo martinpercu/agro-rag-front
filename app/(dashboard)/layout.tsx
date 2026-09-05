@@ -207,7 +207,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         className={`dashboard-right ${rightOpen ? "open" : "collapsed"} hidden lg:flex`}
         animate={{ width: rightOpen ? 340 : 56 }}
         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        style={{ width: rightOpen ? 340 : 56 }}
       >
         <div className="right-icons">
           <button
