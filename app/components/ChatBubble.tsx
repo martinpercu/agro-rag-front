@@ -2,6 +2,7 @@
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useTranslations } from "next-intl";
 
 type Source = {
   pagina: number;
@@ -66,11 +67,12 @@ export function ChatBubble({
   );
 }
 
-function SourcesBlock({ sources, lang }: { sources: Source[]; lang?: string }) {
+function SourcesBlock({ sources }: { sources: Source[]; lang?: string }) {
+  const t = useTranslations("MessageList");
   return (
     <details className="bubble-sources">
       <summary>
-        {lang === "en" ? "View sources" : "Ver fuentes"} · {sources.length}
+        {t("viewSources")} · {sources.length}
       </summary>
       <div className="bubble-sources-list">
         {sources.slice(0, 6).map((s, i) => (
@@ -88,9 +90,10 @@ function SourcesBlock({ sources, lang }: { sources: Source[]; lang?: string }) {
 }
 
 function TraceBlock({ trace }: { trace: TraceStep[] }) {
+  const t = useTranslations("MessageList");
   return (
     <details className="bubble-trace">
-      <summary>Trace · {trace.length}</summary>
+      <summary>{t("trace")} · {trace.length}</summary>
       <div className="bubble-trace-list">
         {trace.map((t, i) => (
           <div key={i} className="trace-item">

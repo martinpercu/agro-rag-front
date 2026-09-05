@@ -1,31 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 type Lang = "es" | "en";
-
-const TEXTS: Record<Lang, Record<string, string>> = {
-  es: {
-    esperando: "Esperando una consulta...",
-    buscando: "Buscando información...",
-    tu: "Tú",
-    verFuentes: "Ver fuentes",
-    ocultarFuentes: "Ocultar fuentes",
-    verTrace: "Ver trace",
-    ocultarTrace: "Ocultar trace",
-    errorDesconocido: "Error desconocido",
-  },
-  en: {
-    esperando: "Waiting for a question...",
-    buscando: "Searching...",
-    tu: "You",
-    verFuentes: "View sources",
-    ocultarFuentes: "Hide sources",
-    verTrace: "View trace",
-    ocultarTrace: "Hide trace",
-    errorDesconocido: "Unknown error",
-  },
-};
 
 type Source = {
   pagina: number;
@@ -96,7 +74,7 @@ export function StrategyCard({
   const scrollRef = useRef<HTMLDivElement>(null);
   const meta = LABELS[name] || { label: { es: name, en: name }, tone: "neutral" };
   const label = meta.label[lang];
-  const t = TEXTS[lang];
+  const t = useTranslations("StrategyCard");
 
   useEffect(() => {
     if (isStreaming) {
@@ -142,13 +120,13 @@ export function StrategyCard({
 
       <div ref={scrollRef} className="ap-card__body strategy-card-body">
         {history.length === 0 && state.status === "idle" && (
-          <div className="ap-card__empty strategy-empty">{t.esperando}</div>
+          <div className="ap-card__empty strategy-empty">{t("esperando")}</div>
         )}
 
         {history.map((msg, i) => (
           <div key={i} className={`strategy-msg ${msg.role}`}>
             <div className="strategy-msg-label">
-              {msg.role === "user" ? t.tu : label}
+              {msg.role === "user" ? t("tu") : label}
             </div>
             <div className="strategy-msg-text">{msg.content}</div>
           </div>
@@ -159,7 +137,7 @@ export function StrategyCard({
             <div className="strategy-msg-label">{label}</div>
             <div className="strategy-msg-text">
               <span className="spinner" />
-              {t.buscando}
+              {t("buscando")}
             </div>
           </div>
         )}
@@ -174,7 +152,7 @@ export function StrategyCard({
         {state.status === "error" && (
           <div className="strategy-msg assistant">
             <div className="strategy-msg-label">{label}</div>
-            <div className="strategy-msg-text strategy-error">{state.error || t.errorDesconocido}</div>
+            <div className="strategy-msg-text strategy-error">{state.error || t("errorDesconocido")}</div>
           </div>
         )}
       </div>
@@ -193,7 +171,7 @@ export function StrategyCard({
               className="ap-btn ap-btn--ghost ap-btn--sm card-toggle"
               onClick={() => setExpanded(!expanded)}
             >
-              {expanded ? t.ocultarFuentes : t.verFuentes}
+              {expanded ? t("ocultarFuentes") : t("verFuentes")}
             </button>
             {expanded && (
               <div className="ap-log ap-log--dashed card-sources">
@@ -210,7 +188,7 @@ export function StrategyCard({
               className="ap-btn ap-btn--ghost ap-btn--sm card-toggle"
               onClick={() => setTraceExpanded(!traceExpanded)}
             >
-              {traceExpanded ? t.ocultarTrace : t.verTrace}
+              {traceExpanded ? t("ocultarTrace") : t("verTrace")}
             </button>
             {traceExpanded && (
               <div className="ap-log ap-log--dashed card-trace">

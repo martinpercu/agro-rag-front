@@ -1,0 +1,81 @@
+{
+  "Lab": {
+    "title": "Agroposta — Lab",
+    "subtitle": "Comparador RAG · 7 estrategias lado a lado · Edición 2026/05 · /dev",
+    "limpiar": "Limpiar",
+    "placeholder": "Hacele una pregunta a todas las estrategias...",
+    "enviar": "Enviar",
+    "procesando": "Procesando...",
+    "errorConexion": "Error de conexión",
+    "errorRed": "Error de red",
+    "kMin": "Máxima precisión",
+    "kMax": "Máxima cobertura",
+    "irAlChat": "ir al chat producto →"
+  },
+  "StrategyCard": {
+    "esperando": "Esperando una consulta...",
+    "buscando": "Buscando información...",
+    "tu": "Tú",
+    "verFuentes": "Ver fuentes",
+    "ocultarFuentes": "Ocultar fuentes",
+    "verTrace": "Ver trace",
+    "ocultarTrace": "Ocultar trace",
+    "errorDesconocido": "Error desconocido"
+  },
+  "Chat": {
+    "title": "Chat",
+    "subtitle": "Márgenes 2026/05 · baseline",
+    "subtitleEn": "Margenes 2026/05 · baseline",
+    "editInDev": "(editar en /dev)",
+    "editInDevEn": "(edit in /dev)",
+    "clear": "Limpiar",
+    "clearEn": "Clear",
+    "thinking": "Pensando…",
+    "thinkingEn": "Thinking…",
+    "send": "Enviar",
+    "sendEn": "Send",
+    "baselineOnly": "Solo baseline en prod · k/temp heredados de /dev · ubicación opcional",
+    "baselineOnlyEn": "Baseline only in prod · k/temp inherited from /dev · no location required",
+    "askPlaceholder": "Preguntá sobre Márgenes Agropecuarios… (Shift+Enter para salto)",
+    "askPlaceholderEn": "Ask about Margenes Agropecuarios… (Shift+Enter for newline)"
+  },
+  "MessageList": {
+    "what": "¿Qué querés investigar?",
+    "whatEn": "What do you want to investigate?",
+    "subtitle": "Preguntá sobre costos, márgenes o cultivos de Márgenes Agropecuarios. La respuesta cita página y edición.",
+    "subtitleEn": "Ask about costs, margins or crops from Márgenes Agropecuarios. The answer cites page + edition.",
+    "example1": "margen maíz 80ha Pergamino",
+    "example2": "¿qué variedad de soja rinde más en 2026/05?",
+    "example3": "coste gasoil por ha",
+    "viewSources": "Ver fuentes",
+    "viewSourcesEn": "View sources",
+    "trace": "Trace"
+  },
+  "Composer": {
+    "hint": "Solo baseline en prod · k/temp heredados de /dev · ubicación opcional",
+    "hintEn": "Baseline only in prod · k/temp inherited from /dev · no location required"
+  },
+  "Login": {
+    "title": "Agroposta — Login",
+    "subtitle": "Supabase Auth · magic no, email+password por ahora",
+    "supabaseNotConfigured": "Supabase no configurado. Definí NEXT_PUBLIC_SUPABASE_URL y ANON_KEY en .env.local",
+    "signIn": "Sign in",
+    "signUp": "Sign up",
+    "entrar": "Entrar",
+    "crearCuenta": "Crear cuenta",
+    "cuentaCreada": "Cuenta creada. Revisá tu email si pide confirmación, luego hacé Sign in.",
+    "hint": "Al loguearte se guarda tu sesión y tus investigadas/planes en Postgres Railway."
+  },
+  "Sidebar": {
+    "chat": "Chat",
+    "misInvestigadas": "Mis investigadas",
+    "misPlanes": "Mis planes",
+    "lab": "Lab /dev",
+    "pronto": "pronto",
+    "baselineOnly": "Baseline only en prod · k/temp desde /dev",
+    "aunNoHay": "Aún no hay. Hacé una pregunta y se guarda sutil.",
+    "supabaseNoConfig": "Supabase no configurado",
+    "salir": "Salir",
+    "entrar": "Entrar"
+  }
+}

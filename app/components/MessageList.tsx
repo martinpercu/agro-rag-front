@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { ChatBubble } from "./ChatBubble";
 
 type Source = {
@@ -43,6 +44,7 @@ export function MessageList({
 }) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const t = useTranslations("MessageList");
 
   useEffect(() => {
     const isStreaming = messages.some((m) => m.streaming);
@@ -53,14 +55,8 @@ export function MessageList({
     return (
       <div className="message-list empty">
         <div className="ap-card empty-state p-6 text-center max-w-[520px] mx-auto">
-          <div className="empty-title">
-            {lang === "en" ? "What do you want to investigate?" : "¿Qué querés investigar?"}
-          </div>
-          <div className="empty-subtitle">
-            {lang === "en"
-              ? "Ask about costs, margins or crops from Márgenes Agropecuarios. The answer cites page + edition."
-              : "Preguntá sobre costos, márgenes o cultivos de Márgenes Agropecuarios. La respuesta cita página y edición."}
-          </div>
+          <div className="empty-title">{t("what")}</div>
+          <div className="empty-subtitle">{t("subtitle")}</div>
           <div className="empty-examples flex flex-wrap gap-2 justify-center mt-3">
             <span className="ap-badge ap-badge--neutral empty-chip">“margen maíz 80ha Pergamino”</span>
             <span className="ap-badge ap-badge--neutral empty-chip">“¿qué variedad de soja rinde más en 2026/05?”</span>

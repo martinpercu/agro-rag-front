@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Send, Square, Loader2 } from "lucide-react";
+import { Send, Loader2 } from "lucide-react";
 import { useIconSize } from "../hooks/use-icon-size";
+import { useTranslations } from "next-intl";
 
 export function Composer({
   onSend,
@@ -18,6 +19,7 @@ export function Composer({
 }) {
   const [value, setValue] = useState("");
   const iconBtn = useIconSize("button");
+  const t = useTranslations("Chat");
 
   function submit() {
     const trimmed = value.trim();
@@ -53,12 +55,7 @@ export function Composer({
         <textarea
           rows={2}
           value={value}
-          placeholder={
-            placeholder ??
-            (lang === "en"
-              ? "Ask about Margenes Agropecuarios… (Shift+Enter for newline)"
-              : "Preguntá sobre Márgenes Agropecuarios… (Shift+Enter para salto)")
-          }
+          placeholder={placeholder ?? t("askPlaceholder")}
           onChange={(e) => {
             setValue(e.target.value);
             adjustHeight(e.target as HTMLTextAreaElement);
@@ -72,8 +69,8 @@ export function Composer({
           type="submit"
           disabled={disabled || !value.trim()}
           className="ap-btn ap-btn--primary h-[44px] w-[44px] p-0 shrink-0"
-          aria-label={disabled ? "Pensando" : "Enviar"}
-          title={disabled ? (lang === "en" ? "Thinking…" : "Pensando…") : lang === "en" ? "Send" : "Enviar"}
+          aria-label={disabled ? t("thinking") : t("send")}
+          title={disabled ? t("thinking") : t("send")}
         >
           {disabled ? (
             <Loader2 size={iconBtn} className="animate-spin" />
@@ -84,11 +81,7 @@ export function Composer({
           )}
         </button>
       </div>
-      <div className="dashboard-composer-hint">
-        {lang === "en"
-          ? "Baseline only in prod · k/temp inherited from /dev · no location required"
-          : "Solo baseline en prod · k/temp heredados de /dev · ubicación opcional"}
-      </div>
+      <div className="dashboard-composer-hint">{t("baselineOnly")}</div>
     </motion.form>
   );
 }

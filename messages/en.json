@@ -1,0 +1,81 @@
+{
+  "Lab": {
+    "title": "Agroposta — Lab",
+    "subtitle": "RAG Comparator · 7 strategies side by side · Issue 2026/05 · /dev",
+    "limpiar": "Clear",
+    "placeholder": "Ask a question to all strategies...",
+    "enviar": "Send",
+    "procesando": "Processing...",
+    "errorConexion": "Connection error",
+    "errorRed": "Network error",
+    "kMin": "Maximum precision",
+    "kMax": "Maximum coverage",
+    "irAlChat": "go to product chat →"
+  },
+  "StrategyCard": {
+    "esperando": "Waiting for a question...",
+    "buscando": "Searching...",
+    "tu": "You",
+    "verFuentes": "View sources",
+    "ocultarFuentes": "Hide sources",
+    "verTrace": "View trace",
+    "ocultarTrace": "Hide trace",
+    "errorDesconocido": "Unknown error"
+  },
+  "Chat": {
+    "title": "Chat",
+    "subtitle": "Margenes 2026/05 · baseline",
+    "subtitleEn": "Margenes 2026/05 · baseline",
+    "editInDev": "(edit in /dev)",
+    "editInDevEn": "(edit in /dev)",
+    "clear": "Clear",
+    "clearEn": "Clear",
+    "thinking": "Thinking…",
+    "thinkingEn": "Thinking…",
+    "send": "Send",
+    "sendEn": "Send",
+    "baselineOnly": "Baseline only in prod · k/temp inherited from /dev · no location required",
+    "baselineOnlyEn": "Baseline only in prod · k/temp inherited from /dev · no location required",
+    "askPlaceholder": "Ask about Margenes Agropecuarios… (Shift+Enter for newline)",
+    "askPlaceholderEn": "Ask about Margenes Agropecuarios… (Shift+Enter for newline)"
+  },
+  "MessageList": {
+    "what": "What do you want to investigate?",
+    "whatEn": "What do you want to investigate?",
+    "subtitle": "Ask about costs, margins or crops from Márgenes Agropecuarios. The answer cites page + edition.",
+    "subtitleEn": "Ask about costs, margins or crops from Márgenes Agropecuarios. The answer cites page + edition.",
+    "example1": "margen maíz 80ha Pergamino",
+    "example2": "¿qué variedad de soja rinde más en 2026/05?",
+    "example3": "coste gasoil por ha",
+    "viewSources": "View sources",
+    "viewSourcesEn": "View sources",
+    "trace": "Trace"
+  },
+  "Composer": {
+    "hint": "Baseline only in prod · k/temp inherited from /dev · no location required",
+    "hintEn": "Baseline only in prod · k/temp inherited from /dev · no location required"
+  },
+  "Login": {
+    "title": "Agroposta — Login",
+    "subtitle": "Supabase Auth · magic no, email+password por now",
+    "supabaseNotConfigured": "Supabase not configured. Define NEXT_PUBLIC_SUPABASE_URL and ANON_KEY in .env.local",
+    "signIn": "Sign in",
+    "signUp": "Sign up",
+    "entrar": "Entrar",
+    "crearCuenta": "Create account",
+    "cuentaCreada": "Account created. Check your email for confirmation, then Sign in.",
+    "hint": "After logging in, your session and investigations/plans are saved in Postgres Railway."
+  },
+  "Sidebar": {
+    "chat": "Chat",
+    "misInvestigadas": "Mis investigadas",
+    "misPlanes": "Mis planes",
+    "lab": "Lab /dev",
+    "pronto": "soon",
+    "baselineOnly": "Baseline only in prod · k/temp from /dev",
+    "aunNoHay": "No yet. Ask a question and it will be saved subtly.",
+    "supabaseNoConfig": "Supabase not configured",
+    "salir": "Logout",
+    "entrar": "Login"
+  }
+}

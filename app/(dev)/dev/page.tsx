@@ -4,35 +4,9 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { StrategyCard, type CardState } from "../../components/StrategyCard";
 import { ThemeToggle } from "../../components/ThemeToggle";
 import { useAgroSession, getAuthHeader } from "../../hooks/use-agro-session";
+import { useTranslations } from "next-intl";
 
 type Lang = "es" | "en";
-
-const TEXTS: Record<Lang, Record<string, string>> = {
-  es: {
-    title: "Agroposta — Lab",
-    subtitle: "Comparador RAG · 7 estrategias lado a lado · Edición 2026/05 · /dev",
-    limpiar: "Limpiar",
-    placeholder: "Hacele una pregunta a todas las estrategias...",
-    enviar: "Enviar",
-    procesando: "Procesando...",
-    errorConexion: "Error de conexión",
-    errorRed: "Error de red",
-    kMin: "Máxima precisión",
-    kMax: "Máxima cobertura",
-  },
-  en: {
-    title: "Agroposta — Lab",
-    subtitle: "RAG Comparator · 7 strategies side by side · Issue 2026/05 · /dev",
-    limpiar: "Clear",
-    placeholder: "Ask a question to all strategies...",
-    enviar: "Send",
-    procesando: "Processing...",
-    errorConexion: "Connection error",
-    errorRed: "Network error",
-    kMin: "Maximum precision",
-    kMax: "Maximum coverage",
-  },
-};
 
 const STRATEGIES = [
   "baseline",
@@ -96,7 +70,7 @@ export default function DevPage() {
   const { userEmail, isConfigured, signOut } = useAgroSession();
 
   const busyRef = useRef(false);
-  const t = TEXTS[lang];
+  const t = useTranslations("Lab");
   const hydratedRef = useRef(false);
 
   // Hydrate from localStorage after mount (avoids SSR mismatch)
@@ -165,6 +139,7 @@ export default function DevPage() {
     const next: Lang = lang === "es" ? "en" : "es";
     setLang(next);
     localStorage.setItem("agroposta_lang", next);
+    window.dispatchEvent(new Event("agroposta:lang-change"));
   }
 
   const resetStates = useCallback(() => {
@@ -224,7 +199,7 @@ export default function DevPage() {
         setStates((prev) => {
           const next = { ...prev };
           for (const name of enabledNames) {
-            next[name] = { status: "error", answer: "", sources: [], error: t.errorConexion };
+            next[name] = { status: "error", answer: "", sources: [], error: t("errorConexion") };
           }
           return next;
         });
@@ -326,7 +301,7 @@ export default function DevPage() {
       setStates((prev) => {
         const next = { ...prev };
         for (const name of enabledNames) {
-          next[name] = { status: "error", answer: "", sources: [], error: t.errorRed };
+          next[name] = { status: "error", answer: "", sources: [], error: t("errorRed") };
         }
         return next;
       });
@@ -349,9 +324,9 @@ export default function DevPage() {
     <div className="layout-grid builder">
       <header className="grid-header">
         <div>
-          <h1>{t.title}</h1>
+          <h1>{t("title")}</h1>
           <div className="subtitle">
-            {t.subtitle} — <a href="/" className="text-brand underline underline-offset-2 hover:text-brand-hover">ir al chat producto →</a>
+            {t("subtitle")} — <a href="/" className="text-brand underline underline-offset-2 hover:text-brand-hover">{t("irAlChat")}</a>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -377,7 +352,7 @@ export default function DevPage() {
             {lang === "es" ? "🇺🇸 EN" : "🇪🇸 ES"}
           </button>
           <button className="ap-btn ap-btn--secondary ap-btn--sm download-btn" onClick={clearHistories} disabled={busy}>
-            {t.limpiar}
+            {t("limpiar")}
           </button>
         </div>
       </header>
@@ -423,7 +398,7 @@ export default function DevPage() {
               <span className="k-max">1</span>
             </div>
           </div>
-          <div className={`k-desc ${k !== 1 ? "invisible" : "visible"}`}>{t.kMin}</div>
+          <div className={`k-desc ${k !== 1 ? "invisible" : "visible"}`}>{t("kMin")}</div>
           <div className="k-control ap-k-control">
             <span className="k-label ap-k-label">K</span>
             <span className="k-value ap-k-value">{k}</span>
@@ -441,7 +416,7 @@ export default function DevPage() {
               <span className="k-max">16</span>
             </div>
           </div>
-          <div className={`k-desc ${k !== 16 ? "invisible" : "visible"}`}>{t.kMax}</div>
+          <div className={`k-desc ${k !== 16 ? "invisible" : "visible"}`}>{t("kMax")}</div>
           <div className="branch-inputs">
             <label className="branch-field ap-branch-field">
               <span>Sem-BM25</span>
@@ -473,7 +448,7 @@ export default function DevPage() {
         <div className="composer-inner ap-composer__inner">
           <textarea
             rows={2}
-            placeholder={t.placeholder}
+            placeholder={t("placeholder")}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
@@ -486,7 +461,7 @@ export default function DevPage() {
             className="ap-textarea"
           />
           <button type="submit" disabled={busy || !input.trim()} className="ap-btn ap-btn--primary">
-            {busy ? t.procesando : t.enviar}
+            {busy ? t("procesando") : t("enviar")}
           </button>
         </div>
       </form>
