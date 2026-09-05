@@ -19,10 +19,31 @@ type Investigation = {
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [rightOpen, setRightOpen] = useState(false);
+  const [rightTab, setRightTab] = useState<"pins" | "alerts">("pins");
   const [mobileOpen, setMobileOpen] = useState(false);
   const { userEmail, isConfigured, signOut } = useAgroSession();
   const { investigations, loading: investigationsLoading } = useInvestigations(userEmail);
   const iconBtn = useIconSize("button");
+  const pinCount = investigations.length;
+  const alertCount = 0; // dummy hasta backend notifs
+  const [pinnedIds, setPinnedIds] = useState<Set<string>>(new Set());
+  function togglePin(id: string) {
+    setPinnedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function openPins() {
+    setRightTab("pins");
+    setRightOpen(true);
+  }
+  function openAlerts() {
+    setRightTab("alerts");
+    setRightOpen(true);
+  }
 
   const SidebarContent = (
     <>
@@ -57,7 +78,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="sidebar-investigations">
               {investigations.slice(0, 5).map((inv) => (
                 <div key={inv.id} className="sidebar-investigation-item" title={inv.query || ""}>
-                  <span className="sidebar-investigation-query">{inv.query || "(sin query)"}</span>
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="sidebar-investigation-query flex-1 min-w-0">{inv.query || "(sin query)"}</span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        togglePin(inv.id);
+                      }}
+                      className={`ap-btn ap-btn--ghost p-0 h-6 w-6 shrink-0 ${pinnedIds.has(inv.id) ? "text-brand bg-brand-subtle" : "opacity-40 hover:opacity-100"}`}
+                      title={pinnedIds.has(inv.id) ? "Despinnear" : "Pinnear"}
+                    >
+                      <Pin size={12} className={pinnedIds.has(inv.id) ? "fill-current" : ""} />
+                    </button>
+                  </div>
                   {inv.divisions && inv.divisions.length > 0 && (
                     <span className="sidebar-investigation-divisions docnum block mt-0.5">
                       {inv.divisions.map((d) => `${d.hectares}ha${d.cultivo ? ` ${d.cultivo}` : ""}`).join(" · ")}
@@ -178,51 +211,88 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       >
         <div className="right-icons">
           <button
-            className="right-icon-btn"
-            title={rightOpen ? "Cerrar panel" : "Pins"}
-            onClick={() => setRightOpen((v) => !v)}
-            aria-label="Toggle pins"
+            className={`right-icon-btn relative ${rightTab === "pins" && rightOpen ? "bg-brand-subtle border-brand text-brand" : ""}`}
+            title={rightOpen && rightTab === "pins" ? "Cerrar panel" : "Pins"}
+            onClick={() => (rightOpen && rightTab === "pins" ? setRightOpen(false) : openPins())}
+            aria-label="Pins"
           >
             <Pin size={18} strokeWidth={1.5} />
+            {pinCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[9px] font-bold leading-none text-white">
+                {pinCount > 9 ? "9+" : pinCount}
+              </span>
+            )}
           </button>
           <button
-            className="right-icon-btn"
-            title="Notificaciones"
-            onClick={() => setRightOpen((v) => !v)}
-            aria-label="Toggle notifications"
+            className={`right-icon-btn relative ${rightTab === "alerts" && rightOpen ? "bg-brand-subtle border-brand text-brand" : ""}`}
+            title={rightOpen && rightTab === "alerts" ? "Cerrar panel" : "Notificaciones"}
+            onClick={() => (rightOpen && rightTab === "alerts" ? setRightOpen(false) : openAlerts())}
+            aria-label="Notificaciones"
           >
             <Bell size={18} strokeWidth={1.5} />
+            {alertCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-error px-1 text-[9px] font-bold leading-none text-white">
+                {alertCount}
+              </span>
+            )}
           </button>
         </div>
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
           {rightOpen && (
             <motion.div
+              key={rightTab}
               initial={{ opacity: 0, x: 12 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 12 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="right-panel-content"
+              className="right-panel-content flex flex-col flex-1 min-h-0"
             >
-              <div className="right-panel-header">
-                <strong>Pins &amp; notificaciones</strong>
-                <button className="right-close" onClick={() => setRightOpen(false)}>
-                  ✕
+              <div className="right-panel-header flex items-center justify-between gap-2">
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => setRightTab("pins")}
+                    className={`ap-btn ap-btn--sm ${rightTab === "pins" ? "ap-btn--secondary" : "ap-btn--ghost"}`}
+                  >
+                    <Pin size={14} /> Pins
+                    {pinCount > 0 && <span className="ap-badge ap-badge--sm bg-brand text-white ml-1">{pinCount}</span>}
+                  </button>
+                  <button
+                    onClick={() => setRightTab("alerts")}
+                    className={`ap-btn ap-btn--sm ${rightTab === "alerts" ? "ap-btn--secondary" : "ap-btn--ghost"}`}
+                  >
+                    <Bell size={14} /> Alertas
+                  </button>
+                </div>
+                <button className="right-close ap-btn ap-btn--ghost ap-btn--sm" onClick={() => setRightOpen(false)}>
+                  <X size={14} />
                 </button>
               </div>
-              {investigations.length === 0 ? (
-                <div className="right-panel-empty">
-                  Aún no hay pins. Cuando guardes una investigada aparecerá acá.
-                  <br />
-                  <br />
-                  <span className="text-small text-muted">
-                    Fase 0: se guarda sutil con precio/ubicación opcional.
-                  </span>
-                </div>
-              ) : (
-                <div className="right-panel-list">
-                  {investigations.slice(0, 8).map((inv) => (
-                    <div key={inv.id} className="right-panel-item">
-                      <div className="right-panel-item-query">{inv.query || "(sin query)"}</div>
+
+              <div className="flex-1 overflow-y-auto">
+                {rightTab === "pins" ? (
+                  investigations.length === 0 ? (
+                    <div className="right-panel-empty">
+                      Aún no hay pins. Cuando guardes una investigada aparecerá acá.
+                      <br />
+                      <br />
+                      <span className="text-small text-muted">
+                        Fase 0: se guarda sutil con precio/ubicación opcional.
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="right-panel-list">
+                      {investigations.slice(0, 8).map((inv) => (
+                    <div key={inv.id} className="right-panel-item ap-card p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="right-panel-item-query flex-1 min-w-0">{inv.query || "(sin query)"}</div>
+                        <button
+                          onClick={() => togglePin(inv.id)}
+                          className={`ap-btn ap-btn--ghost p-0 h-6 w-6 shrink-0 ${pinnedIds.has(inv.id) ? "text-brand bg-brand-subtle" : "opacity-40 hover:opacity-100"}`}
+                          title={pinnedIds.has(inv.id) ? "Despinnear" : "Pinnear"}
+                        >
+                          <Pin size={12} className={pinnedIds.has(inv.id) ? "fill-current" : ""} />
+                        </button>
+                      </div>
                       {inv.divisions && inv.divisions.length > 0 && (
                         <div className="right-panel-item-divisions text-small text-muted mt-1">
                           {inv.divisions.map((d) => `${d.hectares}ha${d.cultivo ? ` ${d.cultivo}` : ""}`).join(" · ")}
@@ -232,9 +302,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         {inv.edition_id} · {inv.created_at ? new Date(inv.created_at).toLocaleDateString("es-AR") : ""}
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
+                      ))}
+                    </div>
+                  )
+                ) : (
+                  <div className="p-3 flex flex-col gap-3">
+                    <div className="ap-log__empty text-small">
+                      No hay alertas. Próximamente: volatilidad, precios, recordatorios.
+                    </div>
+                    <div className="ap-card p-3">
+                      <div className="text-small font-semibold">Márgenes — vista previa</div>
+                      <div className="text-micro text-muted mt-1">Soja vs maíz 2026/05 (demo)</div>
+                      <div className="mt-2 h-20 rounded bg-brand-subtle border border-subtle flex items-center justify-center text-small text-muted">
+                        Chart placeholder — recharts P2
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
