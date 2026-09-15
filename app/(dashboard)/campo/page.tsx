@@ -1,8 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { getAuthHeader } from "../../hooks/use-agro-session";
+
+const FieldDrawMap = dynamic(() => import("../../components/FieldDrawMap"), {
+  ssr: false,
+  loading: () => <div className="text-sm opacity-60">…</div>,
+});
 
 type Bucket = {
   date_from: string;
@@ -33,7 +39,7 @@ function shortDate(iso: string): string {
 export default function CampoPage() {
   const t = useTranslations("Campo");
   const [lang, setLang] = useState<Lang>("es");
-  const [tab, setTab] = useState<"point" | "manual">("point");
+  const [tab, setTab] = useState<"point" | "manual" | "draw">("point");
   const [lat, setLat] = useState("-34.5");
   const [lng, setLng] = useState("-62.0");
   const [ha, setHa] = useState("5");
@@ -46,6 +52,7 @@ export default function CampoPage() {
   const [error, setError] = useState("");
   const [result, setResult] = useState<NdviResult | null>(null);
   const [lastLocation, setLastLocation] = useState<Record<string, unknown> | null>(null);
+  const [drawnPolygon, setDrawnPolygon] = useState<Record<string, unknown> | null>(null);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
@@ -86,12 +93,12 @@ export default function CampoPage() {
     return { vertices };
   }
 
-  async function fetchNdvi() {
+  async function fetchNdvi(locationOverride?: Record<string, unknown>) {
     setLoading(true);
     setError("");
     setSaved(false);
     try {
-      const location = buildLocation();
+      const location = locationOverride ?? buildLocation();
       const res = await fetch("/api/proxy/satellite/ndvi", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -147,19 +154,38 @@ export default function CampoPage() {
       </div>
 
       <div className="max-w-[760px] mx-auto w-full px-4 pb-24 flex flex-col gap-4">
-        <div className="flex gap-2">
-          {(["point", "manual"] as const).map((m) => (
+        <div className="flex gap-2 flex-wrap">
+          {(["point", "manual", "draw"] as const).map((m) => (
             <button
               key={m}
               onClick={() => setTab(m)}
               className={`ap-btn ${tab === m ? "" : "ap-btn--ghost"}`}
             >
-              {tx(m === "point" ? "tabPoint" : "tabManual")}
+              {tx(m === "point" ? "tabPoint" : m === "manual" ? "tabManual" : "tabDraw")}
             </button>
           ))}
         </div>
 
-        {tab === "point" ? (
+        {tab === "draw" ? (
+          <div className="flex flex-col gap-3">
+            <FieldDrawMap
+              center={[Number(lat) || -34.5, Number(lng) || -62.0]}
+              onPolygon={setDrawnPolygon}
+              t={t}
+            />
+            <div>
+              <button
+                onClick={() => drawnPolygon && fetchNdvi({ polygon: drawnPolygon })}
+                disabled={loading || !drawnPolygon}
+                className="ap-btn ap-btn--primary"
+              >
+                {loading ? t("fetching") : t("drawUse")}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {tab === "point" ? (
           <div className="grid grid-cols-3 gap-3">
             <label className="flex flex-col gap-1 text-sm">
               {t("lat")}
@@ -207,6 +233,8 @@ export default function CampoPage() {
             </div>
           </div>
         )}
+          </>
+        )}
 
         <div className="grid grid-cols-3 gap-3">
           <label className="flex flex-col gap-1 text-sm">
@@ -227,7 +255,7 @@ export default function CampoPage() {
         </div>
 
         <div>
-          <button onClick={fetchNdvi} disabled={loading} className="ap-btn ap-btn--primary">
+          <button onClick={() => fetchNdvi()} disabled={loading} className="ap-btn ap-btn--primary">
             {loading ? t("fetching") : t("fetch")}
           </button>
         </div>
