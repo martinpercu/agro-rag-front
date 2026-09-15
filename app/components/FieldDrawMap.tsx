@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LayersControl, MapContainer, Polygon, CircleMarker, TileLayer, useMap, useMapEvents } from "react-leaflet";
+import { LayersControl, MapContainer, Polygon, CircleMarker, ScaleControl, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
 export type LatLng = { lat: number; lng: number };
@@ -78,7 +78,20 @@ export default function FieldDrawMap({
               url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
           </LayersControl.BaseLayer>
+          <LayersControl.Overlay checked name="Lugares y rutas">
+            <TileLayer
+              attribution="Esri, HERE, Garmin, OpenStreetMap contributors"
+              url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
+            />
+          </LayersControl.Overlay>
+          <LayersControl.Overlay checked name="Transporte">
+            <TileLayer
+              attribution="Esri, HERE, Garmin, OpenStreetMap contributors"
+              url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}"
+            />
+          </LayersControl.Overlay>
         </LayersControl>
+        <ScaleControl position="bottomleft" imperial={false} />
         <ClickCatcher onAdd={add} />
         <Recenter center={center} />
         {verts.map((v, i) => (
