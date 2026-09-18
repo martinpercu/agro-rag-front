@@ -28,60 +28,16 @@
       "skillPath": "skills/maplibre-cartography/SKILL.md",
       "computedHash": "9fc484e170614b80200d39d5f2029d1888c77e3ca084e412a40616e7d6d37e23"
     },
-    "maplibre-fonts-glyphs": {
-      "source": "maplibre/maplibre-agent-skills",
-      "sourceType": "github",
-      "skillPath": "skills/maplibre-fonts-glyphs/SKILL.md",
-      "computedHash": "461c9d558292c9433890a3728541863a771ec7849052124278cf3e1144c54820"
-    },
-    "maplibre-mapbox-migration": {
-      "source": "maplibre/maplibre-agent-skills",
-      "sourceType": "github",
-      "skillPath": "skills/maplibre-mapbox-migration/SKILL.md",
-      "computedHash": "5585b0b79e26f64c392b814babedaac3cbc2dd48435dd5eefee4f53b972aa745"
-    },
-    "maplibre-pmtiles-patterns": {
-      "source": "maplibre/maplibre-agent-skills",
-      "sourceType": "github",
-      "skillPath": "skills/maplibre-pmtiles-patterns/SKILL.md",
-      "computedHash": "236cd84ff81b8e24c8d0a02a21d0e62dd05702dd37b11220c6a047365d9b2be4"
-    },
     "maplibre-tile-sources": {
       "source": "maplibre/maplibre-agent-skills",
       "sourceType": "github",
       "skillPath": "skills/maplibre-tile-sources/SKILL.md",
       "computedHash": "f3bdeeccad44178664b3c2081989ee26f33a20b93aada8407fca1ea3945e02f4"
     },
-    "maps": {
-      "source": "dave1010/tools",
-      "sourceType": "github",
-      "skillPath": ".agents/skills/maps/SKILL.md",
-      "computedHash": "d971c6b85bc5b781fccc270b0ce4b5cb62c1a2eb6bfca1eb090b94ba0957cba7"
-    },
     "next-best-practices": {
       "source": "vercel-labs/next-skills",
       "sourceType": "autoskills-registry",
       "computedHash": "22d9bba45864c4ae8acca9f6430290634343b7de91005d090e0ba201bdbbb5da"
-    },
-    "next-cache-components": {
-      "source": "vercel-labs/next-skills",
-      "sourceType": "autoskills-registry",
-      "computedHash": "82a02f95879e9adf1a5a89f9ca2f51813e41ff3bab3c723cc8905f5a926bdd30"
-    },
-    "next-upgrade": {
-      "source": "vercel-labs/next-skills",
-      "sourceType": "autoskills-registry",
-      "computedHash": "265833561c41038b4a626585b46186cff859b7f9b2254ae6b88d01648790a7b4"
-    },
-    "nodejs-backend-patterns": {
-      "source": "wshobson/agents",
-      "sourceType": "autoskills-registry",
-      "computedHash": "710a5e6f83c46e8f6c43356df55c143a7375c4414559a581654ce51709138c55"
-    },
-    "nodejs-best-practices": {
-      "source": "sickn33/antigravity-awesome-skills",
-      "sourceType": "autoskills-registry",
-      "computedHash": "7361ab02fb6b09913e3bdd9cf61c629ed6c17de9485e6a781054e5d437ccfc29"
     },
     "playwright-best-practices": {
       "source": "currents-dev/playwright-best-practices-skill",
@@ -93,16 +49,6 @@
       "source": "vercel-labs/agent-skills",
       "sourceType": "autoskills-registry",
       "computedHash": "502eb06700e2c3cb1bd7f710860528f72281320bd5171a2087b05a090b573dc1"
-    },
-    "seo": {
-      "source": "addyosmani/web-quality-skills",
-      "sourceType": "autoskills-registry",
-      "computedHash": "c184da724d1c61ad077f27418ea8e7e88fd54bcdf98165e18be7e4681cbd5e20"
-    },
-    "supabase-postgres-best-practices": {
-      "source": "supabase/agent-skills",
-      "sourceType": "autoskills-registry",
-      "computedHash": "4c09c107aa64d7722369c3856ba8743ea11e7450e4f1227cb72a0d375d1e4fd5"
     },
     "tailwind-css-patterns": {
       "source": "giuseppe-trisciuoglio/developer-kit",
