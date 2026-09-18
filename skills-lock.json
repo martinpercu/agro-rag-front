@@ -16,6 +16,48 @@
       "sourceType": "autoskills-registry",
       "computedHash": "82fb11a63fb1e35ee2469516ed02d54695f783115b1540c0e783197af4240a3a"
     },
+    "leaflet": {
+      "source": "terminalskills/skills",
+      "sourceType": "github",
+      "skillPath": "skills/leaflet/SKILL.md",
+      "computedHash": "0f80c6b0fc8baa5faae25f6614eedc079b09484b167946af59ddc2e8c8229302"
+    },
+    "maplibre-cartography": {
+      "source": "maplibre/maplibre-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/maplibre-cartography/SKILL.md",
+      "computedHash": "9fc484e170614b80200d39d5f2029d1888c77e3ca084e412a40616e7d6d37e23"
+    },
+    "maplibre-fonts-glyphs": {
+      "source": "maplibre/maplibre-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/maplibre-fonts-glyphs/SKILL.md",
+      "computedHash": "461c9d558292c9433890a3728541863a771ec7849052124278cf3e1144c54820"
+    },
+    "maplibre-mapbox-migration": {
+      "source": "maplibre/maplibre-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/maplibre-mapbox-migration/SKILL.md",
+      "computedHash": "5585b0b79e26f64c392b814babedaac3cbc2dd48435dd5eefee4f53b972aa745"
+    },
+    "maplibre-pmtiles-patterns": {
+      "source": "maplibre/maplibre-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/maplibre-pmtiles-patterns/SKILL.md",
+      "computedHash": "236cd84ff81b8e24c8d0a02a21d0e62dd05702dd37b11220c6a047365d9b2be4"
+    },
+    "maplibre-tile-sources": {
+      "source": "maplibre/maplibre-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/maplibre-tile-sources/SKILL.md",
+      "computedHash": "f3bdeeccad44178664b3c2081989ee26f33a20b93aada8407fca1ea3945e02f4"
+    },
+    "maps": {
+      "source": "dave1010/tools",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/maps/SKILL.md",
+      "computedHash": "d971c6b85bc5b781fccc270b0ce4b5cb62c1a2eb6bfca1eb090b94ba0957cba7"
+    },
     "next-best-practices": {
       "source": "vercel-labs/next-skills",
       "sourceType": "autoskills-registry",
@@ -40,6 +82,12 @@
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "autoskills-registry",
       "computedHash": "7361ab02fb6b09913e3bdd9cf61c629ed6c17de9485e6a781054e5d437ccfc29"
+    },
+    "playwright-best-practices": {
+      "source": "currents-dev/playwright-best-practices-skill",
+      "sourceType": "github",
+      "skillPath": "playwright-best-practices/SKILL.md",
+      "computedHash": "7eb144f734450fee649dc1d209114775ddda07cbf45be84fe969d3d4f3971dce"
     },
     "react-best-practices": {
       "source": "vercel-labs/agent-skills",

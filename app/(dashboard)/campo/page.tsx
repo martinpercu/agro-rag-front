@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
-import { getAuthHeader } from "../../hooks/use-agro-session";
+import type { Feature, FeatureCollection, Position } from "geojson";
+import { getAuthHeader, useAgroSession } from "../../hooks/use-agro-session";
+import { useInvestigations } from "../../hooks/use-investigations";
 
 const FieldDrawMap = dynamic(() => import("../../components/FieldDrawMap"), {
   ssr: false,
@@ -36,6 +38,72 @@ function shortDate(iso: string): string {
   return (iso || "").slice(0, 10);
 }
 
+function num(v: unknown): number | null {
+  const n = typeof v === "string" ? Number(v) : (v as number);
+  return typeof n === "number" && Number.isFinite(n) ? n : null;
+}
+
+/** Convierte el `location` guardado de una investigada a Feature GeoJSON (o null si no es mapeable). */
+function locationToFeature(
+  loc: Record<string, unknown> | null | undefined,
+  props: Record<string, string>
+): Feature | null {
+  if (!loc || typeof loc !== "object") return null;
+  try {
+    if ("polygon" in loc && loc.polygon && typeof loc.polygon === "object") {
+      const g = loc.polygon as { type?: unknown; coordinates?: unknown };
+      if ((g.type === "Polygon" || g.type === "MultiPolygon") && Array.isArray(g.coordinates)) {
+        return { type: "Feature", properties: props, geometry: g as Feature["geometry"] };
+      }
+    }
+    if ("vertices" in loc && Array.isArray(loc.vertices)) {
+      const ring: Position[] = [];
+      for (const v of loc.vertices as Array<{ lat?: unknown; lng?: unknown }>) {
+        const la = num(v?.lat);
+        const ln = num(v?.lng);
+        if (la === null || ln === null) return null;
+        ring.push([ln, la]);
+      }
+      if (ring.length < 3) return null;
+      ring.push(ring[0]);
+      return { type: "Feature", properties: props, geometry: { type: "Polygon", coordinates: [ring] } };
+    }
+    if ("bbox" in loc && loc.bbox && typeof loc.bbox === "object") {
+      const b = loc.bbox as Record<string, unknown>;
+      const laMin = num(b.lat_min);
+      const laMax = num(b.lat_max);
+      const lnMin = num(b.lng_min);
+      const lnMax = num(b.lng_max);
+      if (laMin === null || laMax === null || lnMin === null || lnMax === null) return null;
+      return {
+        type: "Feature",
+        properties: props,
+        geometry: {
+          type: "Polygon",
+          coordinates: [[[lnMin, laMin], [lnMax, laMin], [lnMax, laMax], [lnMin, laMax], [lnMin, laMin]]],
+        },
+      };
+    }
+    const la = num((loc as Record<string, unknown>).lat);
+    const ln = num((loc as Record<string, unknown>).lng);
+    if (la !== null && ln !== null) {
+      // Punto + radio: círculo aproximado con 24 lados (r desde ha)
+      const ha = num((loc as Record<string, unknown>).ha) ?? 5;
+      const rM = Math.sqrt(Math.max(ha, 0.1) * 10000 / Math.PI);
+      const ring: Position[] = [];
+      for (let i = 0; i < 24; i++) {
+        const a = (i / 24) * 2 * Math.PI;
+        ring.push([ln + (rM * Math.cos(a)) / (111320 * Math.cos((la * Math.PI) / 180)), la + (rM * Math.sin(a)) / 111320]);
+      }
+      ring.push(ring[0]);
+      return { type: "Feature", properties: props, geometry: { type: "Polygon", coordinates: [ring] } };
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
 export default function CampoPage() {
   const t = useTranslations("Campo");
   const [lang, setLang] = useState<Lang>("es");
@@ -54,6 +122,20 @@ export default function CampoPage() {
   const [lastLocation, setLastLocation] = useState<Record<string, unknown> | null>(null);
   const [drawnPolygon, setDrawnPolygon] = useState<Record<string, unknown> | null>(null);
   const [saved, setSaved] = useState(false);
+  const { userEmail } = useAgroSession();
+  const { investigations } = useInvestigations(userEmail);
+
+  const savedFields: FeatureCollection = useMemo(() => {
+    const features: Feature[] = [];
+    for (const inv of investigations.slice(0, 20)) {
+      const f = locationToFeature(inv.location, {
+        title: inv.query || "(sin query)",
+        meta: `${inv.edition_id || "2026_05"} · ${inv.created_at ? inv.created_at.slice(0, 10) : ""}`,
+      });
+      if (f) features.push(f);
+    }
+    return { type: "FeatureCollection", features };
+  }, [investigations]);
 
   useEffect(() => {
     const stored = localStorage.getItem("agroposta_lang");
@@ -171,6 +253,7 @@ export default function CampoPage() {
             <FieldDrawMap
               center={[Number(lat) || -34.5, Number(lng) || -62.0]}
               onPolygon={setDrawnPolygon}
+              saved={savedFields}
               t={t}
             />
             <div>

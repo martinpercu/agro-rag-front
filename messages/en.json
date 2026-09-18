@@ -101,7 +101,11 @@
     "cached": "cached",
     "live": "live",
     "disclaimer": "NDVI measures vigor, it does not diagnose the cause (water, pests, nitrogen). Verify in the field.",
-    "queryLabel": "NDVI field"
+    "queryLabel": "NDVI field",
+    "locate": "📍 My location",
+    "locating": "Locating…",
+    "locateError": "Could not get your location",
+    "savedLayer": "Investigations"
   },
   "Sidebar": {
     "chat": "Chat",

@@ -101,7 +101,11 @@
     "cached": "caché",
     "live": "en vivo",
     "disclaimer": "El NDVI mide vigor, no diagnostica la causa (agua, plaga, nitrógeno). Verificar a campo.",
-    "queryLabel": "Campo NDVI"
+    "queryLabel": "Campo NDVI",
+    "locate": "📍 Mi ubicación",
+    "locating": "Ubicando…",
+    "locateError": "No se pudo obtener tu ubicación",
+    "savedLayer": "Investigadas"
   },
   "Sidebar": {
     "chat": "Chat",
