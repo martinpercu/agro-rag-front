@@ -115,29 +115,29 @@ export default function FieldDrawMap({
         center={center}
         zoom={14}
         ref={mapRef}
-        style={{ height: 340, width: "100%", borderRadius: 12, zIndex: 0 }}
+        className="field-map"
       >
         <LayersControl position="topright">
-          <LayersControl.BaseLayer checked name="Satelital">
+          <LayersControl.BaseLayer checked name={t("layerSatellite")}>
             <TileLayer
               attribution="Imagery &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics"
               url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
             />
           </LayersControl.BaseLayer>
-          <LayersControl.BaseLayer name="Calles">
+          <LayersControl.BaseLayer name={t("layerStreets")}>
             <TileLayer
               attribution="Esri, HERE, Garmin, OpenStreetMap contributors"
               url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}"
               maxZoom={19}
             />
           </LayersControl.BaseLayer>
-          <LayersControl.Overlay checked name="Lugares y rutas">
+          <LayersControl.Overlay checked name={t("layerPlaces")}>
             <TileLayer
               attribution="Esri, HERE, Garmin, OpenStreetMap contributors"
               url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
             />
           </LayersControl.Overlay>
-          <LayersControl.Overlay checked name="Transporte">
+          <LayersControl.Overlay checked name={t("layerTransport")}>
             <TileLayer
               attribution="Esri, HERE, Garmin, OpenStreetMap contributors"
               url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}"
@@ -189,21 +189,22 @@ export default function FieldDrawMap({
           </>
         )}
       </MapContainer>
-      <div className="text-sm opacity-70">
+      <div className="text-sm text-fg-secondary" aria-live="polite">
         {t("drawHint")} ({verts.length} {t("drawPoints")})
-        {locError && <span className="ml-2 text-red-600 dark:text-red-400">⚠ {t("locateError")}</span>}
+        {locError && <span className="ml-2 text-error">⚠ {t("locateError")}</span>}
       </div>
+      <div className="text-xs text-fg-tertiary">{t("drawAlt")}</div>
       <div className="flex gap-2 flex-wrap">
-        <button onClick={undo} disabled={verts.length === 0} className="ap-btn ap-btn--ghost ap-btn--sm">
+        <button onClick={undo} disabled={verts.length === 0} className="ap-btn ap-btn--ghost ap-btn--md">
           {t("drawUndo")}
         </button>
-        <button onClick={clear} disabled={verts.length === 0} className="ap-btn ap-btn--ghost ap-btn--sm">
+        <button onClick={clear} disabled={verts.length === 0} className="ap-btn ap-btn--ghost ap-btn--md">
           {t("drawClear")}
         </button>
-        <button onClick={close} disabled={closed || verts.length < 3} className="ap-btn ap-btn--primary ap-btn--sm">
+        <button onClick={close} disabled={closed || verts.length < 3} className="ap-btn ap-btn--primary ap-btn--md">
           {t("drawClose")}
         </button>
-        <button onClick={locate} disabled={locating} className="ap-btn ap-btn--ghost ap-btn--sm" title={t("locate")}>
+        <button onClick={locate} disabled={locating} className="ap-btn ap-btn--ghost ap-btn--md" title={t("locate")}>
           {locating ? t("locating") : t("locate")}
         </button>
       </div>

@@ -9,7 +9,7 @@ import { useInvestigations } from "../../hooks/use-investigations";
 
 const FieldDrawMap = dynamic(() => import("../../components/FieldDrawMap"), {
   ssr: false,
-  loading: () => <div className="text-sm opacity-60">…</div>,
+  loading: () => <div className="field-map-skeleton" aria-hidden="true" />,
 });
 
 type Bucket = {
@@ -41,6 +41,20 @@ function shortDate(iso: string): string {
 function num(v: unknown): number | null {
   const n = typeof v === "string" ? Number(v) : (v as number);
   return typeof n === "number" && Number.isFinite(n) ? n : null;
+}
+
+/** Acepta coma decimal ("-34,5") además de punto. */
+function parseNum(v: string): number | null {
+  const n = Number(v.trim().replace(",", "."));
+  return Number.isFinite(n) ? n : null;
+}
+
+/** Clase del punto NDVI (decorativo: el valor numérico va al lado). */
+function ndviClass(v: number): string {
+  if (v > 0.6) return "ndvi-4";
+  if (v > 0.4) return "ndvi-3";
+  if (v > 0.2) return "ndvi-2";
+  return "ndvi-1";
 }
 
 /** Convierte el `location` guardado de una investigada a Feature GeoJSON (o null si no es mapeable). */
@@ -108,9 +122,11 @@ export default function CampoPage() {
   const t = useTranslations("Campo");
   const [lang, setLang] = useState<Lang>("es");
   const [tab, setTab] = useState<"point" | "manual" | "draw">("point");
+  const [manualMode, setManualMode] = useState<"vertices" | "bbox">("vertices");
   const [lat, setLat] = useState("-34.5");
   const [lng, setLng] = useState("-62.0");
   const [ha, setHa] = useState("5");
+  const [invName, setInvName] = useState("");
   const [verticesText, setVerticesText] = useState("-34.0, -62.0\n-34.0, -61.9\n-33.9, -61.95");
   const [bbox, setBbox] = useState({ latMin: "", latMax: "", lngMin: "", lngMax: "" });
   const [agg, setAgg] = useState("P5D");
@@ -149,30 +165,57 @@ export default function CampoPage() {
     return t(key);
   };
 
-  function buildLocation(): Record<string, unknown> {
+  /** Valida el formulario y arma `location`. Si algo falla, setea error amable y devuelve null. */
+  function buildLocation(): Record<string, unknown> | null {
     if (tab === "point") {
-      return { lat: Number(lat), lng: Number(lng), ha: Number(ha) };
+      const la = parseNum(lat);
+      const ln = parseNum(lng);
+      const h = parseNum(ha);
+      if (la === null || ln === null || Math.abs(la) > 90 || Math.abs(ln) > 180) {
+        setError(tx("errorLatLng"));
+        return null;
+      }
+      if (h === null || h < 1 || h > 20) {
+        setError(tx("errorHa"));
+        return null;
+      }
+      return { lat: la, lng: ln, ha: h };
     }
-    const { latMin, latMax, lngMin, lngMax } = bbox;
-    if (latMin && latMax && lngMin && lngMax) {
-      return {
-        bbox: {
-          lat_min: Number(latMin),
-          lat_max: Number(latMax),
-          lng_min: Number(lngMin),
-          lng_max: Number(lngMax),
-        },
-      };
+    if (tab === "manual" && manualMode === "bbox") {
+      const { latMin, latMax, lngMin, lngMax } = bbox;
+      const a = parseNum(latMin);
+      const b = parseNum(latMax);
+      const c = parseNum(lngMin);
+      const d = parseNum(lngMax);
+      if (
+        a === null || b === null || c === null || d === null ||
+        Math.abs(a) > 90 || Math.abs(b) > 90 || Math.abs(c) > 180 || Math.abs(d) > 180 ||
+        a >= b || c >= d
+      ) {
+        setError(tx("errorBbox"));
+        return null;
+      }
+      return { bbox: { lat_min: a, lat_max: b, lng_min: c, lng_max: d } };
     }
-    const vertices = verticesText
-      .split("\n")
-      .map((l) => l.trim())
-      .filter(Boolean)
-      .map((l) => {
-        const [a, b] = l.split(",").map((x) => Number(x.trim()));
-        return { lat: a, lng: b };
-      });
-    return { vertices };
+    if (tab === "manual") {
+      const vertices: { lat: number; lng: number }[] = [];
+      for (const line of verticesText.split("\n")) {
+        const clean = line.trim();
+        if (!clean) continue;
+        const [a, b] = clean.split(",").map((x) => parseNum(x));
+        if (a === null || b === null || Math.abs(a) > 90 || Math.abs(b) > 180) {
+          setError(tx("errorVertices"));
+          return null;
+        }
+        vertices.push({ lat: a, lng: b });
+      }
+      if (vertices.length < 3) {
+        setError(tx("errorVertices"));
+        return null;
+      }
+      return { vertices };
+    }
+    return null;
   }
 
   async function fetchNdvi(locationOverride?: Record<string, unknown>) {
@@ -181,6 +224,10 @@ export default function CampoPage() {
     setSaved(false);
     try {
       const location = locationOverride ?? buildLocation();
+      if (!location) {
+        setLoading(false);
+        return;
+      }
       const res = await fetch("/api/proxy/satellite/ndvi", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -193,10 +240,12 @@ export default function CampoPage() {
       });
       const j = await res.json();
       if (!res.ok) throw new Error(j.detail || `HTTP ${res.status}`);
-      setResult(j as NdviResult);
+      const ndvi = j as NdviResult;
+      setResult(ndvi);
       setLastLocation(location);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setInvName(`${tx("queryLabel")} (${ndvi.area_ha.toFixed(1)} ha)`);
+    } catch {
+      setError(tx("errorFetch"));
       setResult(null);
     } finally {
       setLoading(false);
@@ -212,7 +261,7 @@ export default function CampoPage() {
         method: "POST",
         headers: { "Content-Type": "application/json", ...auth },
         body: JSON.stringify({
-          query: `${t("queryLabel")} (${result.area_ha.toFixed(1)} ha)`,
+          query: invName.trim() || `${tx("queryLabel")} (${result.area_ha.toFixed(1)} ha)`,
           edition_id: "2026_05",
           location: lastLocation,
           metadata: { source: "satellite", aggregation: result.aggregation },
@@ -221,8 +270,8 @@ export default function CampoPage() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setSaved(true);
       window.dispatchEvent(new Event("agroposta:investigation-saved"));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+    } catch {
+      setError(tx("errorSave"));
     }
   }
 
@@ -236,12 +285,13 @@ export default function CampoPage() {
       </div>
 
       <div className="max-w-[760px] mx-auto w-full px-4 pb-24 flex flex-col gap-4">
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap" role="group" aria-label={tx("tabListLabel")}>
           {(["point", "manual", "draw"] as const).map((m) => (
             <button
               key={m}
               onClick={() => setTab(m)}
-              className={`ap-btn ap-btn--sm ${tab === m ? "" : "ap-btn--ghost"}`}
+              aria-pressed={tab === m}
+              className={`ap-btn ap-btn--md ${tab === m ? "ap-btn--secondary" : "ap-btn--ghost"}`}
             >
               {tx(m === "point" ? "tabPoint" : m === "manual" ? "tabManual" : "tabDraw")}
             </button>
@@ -260,7 +310,8 @@ export default function CampoPage() {
               <button
                 onClick={() => drawnPolygon && fetchNdvi({ polygon: drawnPolygon })}
                 disabled={loading || !drawnPolygon}
-                className="ap-btn ap-btn--primary ap-btn--sm"
+                aria-busy={loading}
+                className="ap-btn ap-btn--primary ap-btn--lg"
               >
                 {loading ? t("fetching") : t("drawUse")}
               </button>
@@ -269,134 +320,281 @@ export default function CampoPage() {
         ) : (
           <>
             {tab === "point" ? (
-          <div className="grid grid-cols-3 gap-3">
-            <label className="flex flex-col gap-1 text-sm">
-              {t("lat")}
-              <input className="ap-input" value={lat} onChange={(e) => setLat(e.target.value)} inputMode="decimal" />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              {t("lng")}
-              <input className="ap-input" value={lng} onChange={(e) => setLng(e.target.value)} inputMode="decimal" />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              {t("ha")}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="ap-field">
+              <label className="ap-field__label" htmlFor="campo-lat">
+                {t("lat")}
+              </label>
               <input
-                className="ap-input"
+                id="campo-lat"
+                className="ap-input ap-input--technical"
+                value={lat}
+                onChange={(e) => setLat(e.target.value)}
+                inputMode="decimal"
+                type="number"
+                step="any"
+                min={-90}
+                max={90}
+              />
+            </div>
+            <div className="ap-field">
+              <label className="ap-field__label" htmlFor="campo-lng">
+                {t("lng")}
+              </label>
+              <input
+                id="campo-lng"
+                className="ap-input ap-input--technical"
+                value={lng}
+                onChange={(e) => setLng(e.target.value)}
+                inputMode="decimal"
+                type="number"
+                step="any"
+                min={-180}
+                max={180}
+              />
+            </div>
+            <div className="ap-field">
+              <label className="ap-field__label" htmlFor="campo-ha">
+                {t("ha")}
+              </label>
+              <input
+                id="campo-ha"
+                className="ap-input ap-input--technical"
                 value={ha}
                 onChange={(e) => setHa(e.target.value)}
                 inputMode="decimal"
+                type="number"
+                step="any"
                 min={1}
                 max={20}
+                aria-describedby="campo-ha-hint"
               />
-            </label>
+              <span id="campo-ha-hint" className="ap-field__hint">
+                {tx("haHint")}
+              </span>
+            </div>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            <label className="flex flex-col gap-1 text-sm">
-              {t("verticesLabel")}
-              <textarea
-                className="ap-input font-mono"
-                rows={4}
-                value={verticesText}
-                onChange={(e) => setVerticesText(e.target.value)}
-              />
-            </label>
-            <div className="text-sm opacity-70">{t("bboxTitle")}</div>
-            <div className="grid grid-cols-4 gap-3">
-              {(["latMin", "latMax", "lngMin", "lngMax"] as const).map((k) => (
-                <input
-                  key={k}
-                  className="ap-input"
-                  placeholder={k}
-                  value={bbox[k]}
-                  onChange={(e) => setBbox({ ...bbox, [k]: e.target.value })}
-                  inputMode="decimal"
-                />
+            <div className="flex gap-4 flex-wrap" role="radiogroup" aria-label={tx("modeLabel")}>
+              {(["vertices", "bbox"] as const).map((m) => (
+                <label key={m} className="ap-radio-row">
+                  <input
+                    type="radio"
+                    name="campo-manual-mode"
+                    className="ap-radio"
+                    checked={manualMode === m}
+                    onChange={() => setManualMode(m)}
+                  />
+                  {tx(m === "vertices" ? "modeVertices" : "modeBbox")}
+                </label>
               ))}
             </div>
+            {manualMode === "vertices" ? (
+              <div className="ap-field">
+                <label className="ap-field__label" htmlFor="campo-vertices">
+                  {t("verticesLabel")}
+                </label>
+                <textarea
+                  id="campo-vertices"
+                  className="ap-input ap-input--technical font-mono"
+                  rows={4}
+                  value={verticesText}
+                  onChange={(e) => setVerticesText(e.target.value)}
+                />
+              </div>
+            ) : (
+              <div className="ap-field">
+                <span className="ap-field__label" id="campo-bbox-label">
+                  {t("bboxTitle")}
+                </span>
+                <div
+                  className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+                  role="group"
+                  aria-labelledby="campo-bbox-label"
+                >
+                  {(["latMin", "latMax", "lngMin", "lngMax"] as const).map((k) => (
+                    <input
+                      key={k}
+                      className="ap-input ap-input--technical"
+                      placeholder={tx(k === "latMin" ? "bboxLatMin" : k === "latMax" ? "bboxLatMax" : k === "lngMin" ? "bboxLngMin" : "bboxLngMax")}
+                      aria-label={tx(k === "latMin" ? "bboxLatMin" : k === "latMax" ? "bboxLatMax" : k === "lngMin" ? "bboxLngMin" : "bboxLngMax")}
+                      value={bbox[k]}
+                      onChange={(e) => setBbox({ ...bbox, [k]: e.target.value })}
+                      inputMode="decimal"
+                      type="number"
+                      step="any"
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
           </>
         )}
 
-        <div className="grid grid-cols-3 gap-3">
-          <label className="flex flex-col gap-1 text-sm">
-            {t("aggregation")}
-            <select className="ap-input" value={agg} onChange={(e) => setAgg(e.target.value)}>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="ap-field">
+            <label className="ap-field__label" htmlFor="campo-agg">
+              {t("aggregation")}
+            </label>
+            <select
+              id="campo-agg"
+              className="ap-input ap-select"
+              value={agg}
+              onChange={(e) => setAgg(e.target.value)}
+            >
               <option value="P5D">P5D</option>
               <option value="P1D">P1D</option>
             </select>
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            {t("from")}
-            <input className="ap-input" type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            {t("to")}
-            <input className="ap-input" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
-          </label>
+          </div>
+          <div className="ap-field">
+            <label className="ap-field__label" htmlFor="campo-from">
+              {t("from")}
+            </label>
+            <input
+              id="campo-from"
+              className="ap-input"
+              type="date"
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+            />
+          </div>
+          <div className="ap-field">
+            <label className="ap-field__label" htmlFor="campo-to">
+              {t("to")}
+            </label>
+            <input
+              id="campo-to"
+              className="ap-input"
+              type="date"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+            />
+          </div>
         </div>
 
-        <div>
-          <button onClick={() => fetchNdvi()} disabled={loading} className="ap-btn ap-btn--primary ap-btn--sm">
-            {loading ? t("fetching") : t("fetch")}
-          </button>
-        </div>
+        {tab !== "draw" && (
+          <div>
+            <button
+              onClick={() => fetchNdvi()}
+              disabled={loading}
+              aria-busy={loading}
+              className="ap-btn ap-btn--primary ap-btn--lg"
+            >
+              {loading ? t("fetching") : t("fetch")}
+            </button>
+          </div>
+        )}
 
-        {error && <div className="text-sm text-red-600 dark:text-red-400">⚠ {error}</div>}
+        {error && (
+          <div role="alert" className="flex flex-wrap items-center gap-3 text-sm text-error">
+            <span>⚠ {error}</span>
+            <button
+              onClick={() =>
+                fetchNdvi(tab === "draw" && drawnPolygon ? { polygon: drawnPolygon } : undefined)
+              }
+              disabled={loading || (tab === "draw" && !drawnPolygon)}
+              className="ap-btn ap-btn--ghost ap-btn--md"
+            >
+              {tx("retry")}
+            </button>
+          </div>
+        )}
+
+        {!result && !loading && !error && (
+          <div className="ap-card">
+            <div className="ap-card__body flex flex-col gap-2">
+              <p className="text-sm font-semibold text-fg">{tx("emptyTitle")}</p>
+              <ol className="text-sm text-fg-secondary list-decimal ml-5 flex flex-col gap-1">
+                <li>{tx("emptyStep1")}</li>
+                <li>{tx("emptyStep2")}</li>
+                <li>{tx("emptyStep3")}</li>
+              </ol>
+            </div>
+          </div>
+        )}
 
         {result && (
-          <div className="flex flex-col gap-3">
-            <div className="text-sm opacity-80">
+          <div className="flex flex-col gap-3" aria-live="polite">
+            <div className="text-sm text-fg-secondary">
               {result.area_ha.toFixed(1)} ha · {result.centroid.lat.toFixed(4)}, {result.centroid.lng.toFixed(4)} ·{" "}
               {result.aggregation} · {result.cached ? t("cached") : t("live")}
             </div>
-            <table className="text-sm w-full">
-              <thead>
-                <tr className="text-left opacity-70">
-                  <th className="py-1 pr-2">{t("tableDate")}</th>
-                  <th className="py-1 pr-2">{t("tableMean")}</th>
-                  <th className="py-1 pr-2">{t("tableRange")}</th>
-                  <th className="py-1 pr-2">{t("tableSamples")}</th>
-                </tr>
-              </thead>
-              <tbody className="font-mono">
-                {result.series.map((b) => (
-                  <tr key={b.date_from} className="border-t border-black/10 dark:border-white/10">
-                    <td className="py-1 pr-2">
-                      {shortDate(b.date_from)} → {shortDate(b.date_to)}
-                    </td>
-                    <td className="py-1 pr-2">
-                      {b.ndvi_mean === null ? (
-                        <span className="opacity-60">☁ {t("cloudy")}</span>
-                      ) : (
-                        <>
-                          <span
-                            className="inline-block w-2.5 h-2.5 rounded-full mr-1.5"
-                            style={{
-                              backgroundColor:
-                                b.ndvi_mean > 0.6 ? "#0f540c" : b.ndvi_mean > 0.4 ? "#4f8a2e" : b.ndvi_mean > 0.2 ? "#91bf52" : "#c0392b",
-                            }}
-                          />
-                          {b.ndvi_mean.toFixed(3)}
-                        </>
-                      )}
-                    </td>
-                    <td className="py-1 pr-2">
-                      {b.ndvi_min === null ? "—" : `${b.ndvi_min.toFixed(2)}–${(b.ndvi_max ?? 0).toFixed(2)}`}
-                    </td>
-                    <td className="py-1 pr-2">{b.sample_count}</td>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-fg-secondary" role="note" aria-label={tx("legendTitle")}>
+              <span>
+                <span className="ndvi-dot ndvi-4" aria-hidden="true" />
+                {tx("legendHigh")}
+              </span>
+              <span>
+                <span className="ndvi-dot ndvi-3" aria-hidden="true" />
+                {tx("legendMid")}
+              </span>
+              <span>
+                <span className="ndvi-dot ndvi-2" aria-hidden="true" />
+                {tx("legendLow")}
+              </span>
+              <span>
+                <span className="ndvi-dot ndvi-1" aria-hidden="true" />
+                {tx("legendStress")}
+              </span>
+            </div>
+            <div className="ap-table-wrap">
+              <table className="ap-table">
+                <caption className="sr-only">{tx("tableCaption")}</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">{t("tableDate")}</th>
+                    <th scope="col">{t("tableMean")}</th>
+                    <th scope="col">{t("tableRange")}</th>
+                    <th scope="col">{t("tableSamples")}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {result.series.map((b) => (
+                    <tr key={b.date_from}>
+                      <td>
+                        {shortDate(b.date_from)} → {shortDate(b.date_to)}
+                      </td>
+                      <td className="is-technical">
+                        {b.ndvi_mean === null ? (
+                          <span>☁ {t("cloudy")}</span>
+                        ) : (
+                          <>
+                            <span className={`ndvi-dot ${ndviClass(b.ndvi_mean)}`} aria-hidden="true" />
+                            {b.ndvi_mean.toFixed(3)}
+                          </>
+                        )}
+                      </td>
+                      <td className="is-technical">
+                        {b.ndvi_min === null ? "—" : `${b.ndvi_min.toFixed(2)}–${(b.ndvi_max ?? 0).toFixed(2)}`}
+                      </td>
+                      <td className="is-technical is-numeric">{b.sample_count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="ap-field max-w-[320px]">
+              <label className="ap-field__label" htmlFor="campo-inv-name">
+                {tx("saveName")}
+              </label>
+              <input
+                id="campo-inv-name"
+                className="ap-input"
+                value={invName}
+                onChange={(e) => setInvName(e.target.value)}
+                maxLength={80}
+              />
+            </div>
             <div>
-              <button onClick={saveInvestigation} className="ap-btn ap-btn--sm">
+              <button onClick={saveInvestigation} className="ap-btn ap-btn--md">
                 {t("save")}
               </button>
-              {saved && <span className="ml-2 text-sm text-green-700 dark:text-green-400">✓ {t("saved")}</span>}
+              {saved && <span className="ml-2 text-sm text-success">✓ {t("saved")}</span>}
             </div>
-            <div className="text-xs opacity-60">ⓘ {t("disclaimer")}</div>
+            <div className="text-xs text-fg-tertiary">ⓘ {t("disclaimer")}</div>
           </div>
         )}
       </div>

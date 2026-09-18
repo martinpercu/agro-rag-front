@@ -2020,3 +2020,66 @@ html, body {
     padding: 14px 14px 10px;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Mi campo (/campo) — mapa, leyenda NDVI, radios, skeleton */
+/* Refactor uiux-excellence-guide P0-P2: tokens semánticos, sin hex */
+/* sueltos en JSX, altura responsive, sin depender solo de color. */
+/* ------------------------------------------------------------------ */
+.field-map {
+  height: clamp(280px, 42vh, 460px);
+  width: 100%;
+  border-radius: var(--radius-lg);
+  z-index: 0;
+  background: var(--bg-muted);
+}
+.leaflet-container.field-map { font: inherit; }
+
+.field-map-skeleton {
+  height: clamp(280px, 42vh, 460px);
+  width: 100%;
+  border-radius: var(--radius-lg);
+  background: var(--bg-muted);
+  border: 1px solid var(--border-subtle);
+  animation: ap-pulse 1.2s ease-in-out infinite;
+}
+@keyframes ap-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+/* NDVI dots — decorativos (el valor numérico va al lado, aria-hidden).
+   Leyenda con etiqueta textual: nunca solo color. */
+.ndvi-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+.ndvi-4 { background: #0f540c; }
+.ndvi-3 { background: #4f8a2e; }
+.ndvi-2 { background: #91bf52; }
+.ndvi-1 { background: var(--error); }
+.dark .ndvi-4 { background: var(--brand); }
+.dark .ndvi-3 { background: #7FB069; }
+.dark .ndvi-2 { background: #C9B458; }
+.dark .ndvi-1 { background: var(--error); }
+
+/* Radios nativos con brand + área táctil */
+.ap-radio {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--brand);
+  flex-shrink: 0;
+}
+.ap-radio-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-body);
+  color: var(--text-primary);
+  cursor: pointer;
+  min-height: 44px;
+}
