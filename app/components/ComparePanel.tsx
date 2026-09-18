@@ -1,4 +1,6 @@
 "use client";
+// @deprecated — legacy non-stream 6 cards, usa StrategyCard + /dev sse. No borrar hasta Fase B done, solo referencia. Ver PLAN §A4
+// Si se mounta, avisa en consola para detectar uso indebido.
 
 import { useState, useEffect } from "react";
 
@@ -72,6 +74,9 @@ function makeRunningState(): State {
   return s;
 }
 
+/**
+ * @deprecated — usar StrategyCard (lab) + /dev stream. Este panel es legacy non-stream.
+ */
 export function ComparePanel({
   question,
   history,
@@ -85,6 +90,7 @@ export function ComparePanel({
   const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
+    console.warn("[ComparePanel] deprecated — usa StrategyCard + /dev sse");
     if (!question) return;
     setState(makeRunningState());
     setExpanded(null);
