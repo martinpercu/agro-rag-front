@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { MessageSquare, FlaskConical, ClipboardList, TestTube, Pin, Bell, Sprout, Menu, X } from "lucide-react";
+import { MessageSquare, FlaskConical, ClipboardList, TestTube, Pin, Bell, Sprout, Menu, X, Satellite } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useIconSize } from "../hooks/use-icon-size";
 import { useAgroSession } from "../hooks/use-agro-session";
@@ -63,6 +63,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <MessageSquare size={iconBtn} strokeWidth={1.5} />
           </span>{" "}
           Chat
+        </Link>
+        <Link href="/campo" className="sidebar-link" onClick={() => setMobileOpen(false)}>
+          <span className="sidebar-link-icon flex items-center justify-center">
+            <Satellite size={iconBtn} strokeWidth={1.5} />
+          </span>{" "}
+          Mi campo
         </Link>
         <div className="sidebar-section">
           <div className="sidebar-section-title">
