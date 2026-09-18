@@ -241,7 +241,7 @@ export default function CampoPage() {
             <button
               key={m}
               onClick={() => setTab(m)}
-              className={`ap-btn ${tab === m ? "" : "ap-btn--ghost"}`}
+              className={`ap-btn ap-btn--sm ${tab === m ? "" : "ap-btn--ghost"}`}
             >
               {tx(m === "point" ? "tabPoint" : m === "manual" ? "tabManual" : "tabDraw")}
             </button>
@@ -260,7 +260,7 @@ export default function CampoPage() {
               <button
                 onClick={() => drawnPolygon && fetchNdvi({ polygon: drawnPolygon })}
                 disabled={loading || !drawnPolygon}
-                className="ap-btn ap-btn--primary"
+                className="ap-btn ap-btn--primary ap-btn--sm"
               >
                 {loading ? t("fetching") : t("drawUse")}
               </button>
@@ -338,7 +338,7 @@ export default function CampoPage() {
         </div>
 
         <div>
-          <button onClick={() => fetchNdvi()} disabled={loading} className="ap-btn ap-btn--primary">
+          <button onClick={() => fetchNdvi()} disabled={loading} className="ap-btn ap-btn--primary ap-btn--sm">
             {loading ? t("fetching") : t("fetch")}
           </button>
         </div>
@@ -391,7 +391,7 @@ export default function CampoPage() {
               </tbody>
             </table>
             <div>
-              <button onClick={saveInvestigation} className="ap-btn">
+              <button onClick={saveInvestigation} className="ap-btn ap-btn--sm">
                 {t("save")}
               </button>
               {saved && <span className="ml-2 text-sm text-green-700 dark:text-green-400">✓ {t("saved")}</span>}

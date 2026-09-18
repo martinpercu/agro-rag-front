@@ -272,21 +272,21 @@ export default function LabMap({ center }: { center: [number, number] }) {
       </div>
       {error && <div className="text-sm text-red-600 dark:text-red-400">⚠ {error}</div>}
       <div className="flex gap-2 flex-wrap">
-        <button onClick={undo} disabled={verts.length === 0} className="ap-btn ap-btn--ghost">
+        <button onClick={undo} disabled={verts.length === 0} className="ap-btn ap-btn--ghost ap-btn--sm">
           Deshacer
         </button>
-        <button onClick={clear} disabled={verts.length === 0} className="ap-btn ap-btn--ghost">
+        <button onClick={clear} disabled={verts.length === 0} className="ap-btn ap-btn--ghost ap-btn--sm">
           Limpiar
         </button>
-        <button onClick={close} disabled={closed || verts.length < 3} className="ap-btn ap-btn--primary">
+        <button onClick={close} disabled={closed || verts.length < 3} className="ap-btn ap-btn--primary ap-btn--sm">
           Cerrar polígono
         </button>
-        <button onClick={toggleSat} className="ap-btn ap-btn--ghost">
+        <button onClick={toggleSat} className="ap-btn ap-btn--ghost ap-btn--sm">
           Satélite {satOn ? "on" : "off"}
         </button>
         <button
           onClick={() => switchBase(base === "esri" ? "liberty" : "esri")}
-          className="ap-btn ap-btn--ghost"
+          className="ap-btn ap-btn--ghost ap-btn--sm"
           title="Liberty = vector OpenFreeMap (requiere red, flaky) — solo juego manual"
         >
           Base: {base === "esri" ? "Esri" : "Liberty"}

@@ -16,7 +16,7 @@ export default function DevMapPage() {
         <div>
           <h1>Lab · Mapa MapLibre</h1>
           <div className="subtitle">
-            Liberty vector + Esri satelital + GeoJSON —{" "}
+            Esri satelital + labels + GeoJSON (Liberty vector opt-in) —{" "}
             <Link href="/dev" className="text-brand underline underline-offset-2 hover:text-brand-hover">
               volver al comparador
             </Link>

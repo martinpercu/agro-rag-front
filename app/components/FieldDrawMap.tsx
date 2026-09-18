@@ -195,16 +195,16 @@ export default function FieldDrawMap({
         {locError && <span className="ml-2 text-red-600 dark:text-red-400">⚠ {t("locateError")}</span>}
       </div>
       <div className="flex gap-2 flex-wrap">
-        <button onClick={undo} disabled={verts.length === 0} className="ap-btn ap-btn--ghost">
+        <button onClick={undo} disabled={verts.length === 0} className="ap-btn ap-btn--ghost ap-btn--sm">
           {t("drawUndo")}
         </button>
-        <button onClick={clear} disabled={verts.length === 0} className="ap-btn ap-btn--ghost">
+        <button onClick={clear} disabled={verts.length === 0} className="ap-btn ap-btn--ghost ap-btn--sm">
           {t("drawClear")}
         </button>
-        <button onClick={close} disabled={closed || verts.length < 3} className="ap-btn ap-btn--primary">
+        <button onClick={close} disabled={closed || verts.length < 3} className="ap-btn ap-btn--primary ap-btn--sm">
           {t("drawClose")}
         </button>
-        <button onClick={locate} disabled={locating} className="ap-btn ap-btn--ghost" title={t("locate")}>
+        <button onClick={locate} disabled={locating} className="ap-btn ap-btn--ghost ap-btn--sm" title={t("locate")}>
           {locating ? t("locating") : t("locate")}
         </button>
       </div>
