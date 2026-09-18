@@ -37,7 +37,13 @@
     "baselineOnly": "Baseline only in prod · k/temp inherited from /dev · no location required",
     "baselineOnlyEn": "Baseline only in prod · k/temp inherited from /dev · no location required",
     "askPlaceholder": "Ask about Margenes Agropecuarios… (Shift+Enter for newline)",
-    "askPlaceholderEn": "Ask about Margenes Agropecuarios… (Shift+Enter for newline)"
+    "askPlaceholderEn": "Ask about Margenes Agropecuarios… (Shift+Enter for newline)",
+    "composerLabel": "Write your question",
+    "composerLabelEn": "Write your question",
+    "errorConnection": "Connection error. Check your network and try again.",
+    "errorConnectionEn": "Connection error. Check your network and try again.",
+    "errorUnknown": "Unknown error",
+    "errorUnknownEn": "Unknown error"
   },
   "MessageList": {
     "what": "What do you want to investigate?",
@@ -173,14 +179,31 @@
   },
   "Sidebar": {
     "chat": "Chat",
-    "misInvestigadas": "Mis investigadas",
-    "misPlanes": "Mis planes",
+    "campo": "My field",
+    "misInvestigadas": "My investigations",
+    "misPlanes": "My plans",
     "lab": "Lab /dev",
     "pronto": "soon",
     "baselineOnly": "Baseline only in prod · k/temp from /dev",
-    "aunNoHay": "No yet. Ask a question and it will be saved subtly.",
+    "aunNoHay": "Nothing yet. Ask a question and it will be saved subtly.",
     "supabaseNoConfig": "Supabase not configured",
     "salir": "Logout",
-    "entrar": "Login"
+    "entrar": "Login",
+    "menuOpen": "Open menu",
+    "menuClose": "Close menu",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "pins": "Pins",
+    "alerts": "Alerts",
+    "closePanel": "Close panel",
+    "pinsEmpty": "No pins yet. When you save an investigation it will show up here.",
+    "alertsEmpty": "No alerts. Coming soon: volatility, prices, reminders.",
+    "chartTitle": "Margins — preview",
+    "chartSub": "Soy vs corn 2026/05",
+    "chartSoon": "Chart coming soon.",
+    "themeToDark": "Switch to dark mode",
+    "themeToLight": "Switch to light mode",
+    "themeTitle": "Theme",
+    "langToggle": "Change language"
   }
 }

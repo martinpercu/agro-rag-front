@@ -1705,13 +1705,32 @@ html, body {
   border-radius: 999px;
   font-weight: 500;
   border: 1px solid var(--brand-border);
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    border-color var(--duration-base) var(--ease-default),
+    color var(--duration-base) var(--ease-default),
+    background var(--duration-base) var(--ease-default);
+}
+.empty-chip:hover:not(:disabled) {
+  border-color: var(--brand);
+  color: var(--brand-hover);
+}
+.empty-chip:disabled {
+  cursor: default;
+  opacity: 0.7;
 }
 
 .empty-hint {
   margin-top: 12px;
   font-size: 11px;
-  color: var(--muted);
-  opacity: 0.7;
+  color: var(--text-secondary);
+}
+
+/* Estado "pensando" del stream — visible + anunciado (role=status en JSX) */
+.thinking-label {
+  color: var(--text-secondary);
+  font-size: var(--text-small);
 }
 
 /* Bubbles — human right / agent left Odoo style */
@@ -1790,6 +1809,10 @@ html, body {
   color: var(--muted);
   cursor: pointer;
   list-style: none;
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 4px 0;
 }
 
 .bubble-sources summary::-webkit-details-marker,
@@ -1925,8 +1948,8 @@ html, body {
 }
 
 .right-icon-btn {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--card);

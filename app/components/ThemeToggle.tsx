@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { getStoredTheme, setStoredTheme } from "./ThemeInitializer";
 
 type Props = {
@@ -22,6 +23,7 @@ type Props = {
 export function ThemeToggle({ className, variant = "ghost", size = "sm", showLabel = false }: Props) {
   const [isDark, setIsDark] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const t = useTranslations("Sidebar");
 
   useEffect(() => {
     setMounted(true);
@@ -61,9 +63,9 @@ export function ThemeToggle({ className, variant = "ghost", size = "sm", showLab
     return (
       <button
         className={`ap-btn ${variant === "ghost" ? "ap-btn--ghost" : "ap-btn--secondary"} ap-btn--${size} ${className ?? ""}`}
-        aria-label="Cambiar tema"
+        aria-label={t("themeTitle")}
         disabled
-        title="Tema"
+        title={t("themeTitle")}
       >
         <span aria-hidden>◐</span>
       </button>
@@ -74,8 +76,8 @@ export function ThemeToggle({ className, variant = "ghost", size = "sm", showLab
     <button
       onClick={toggle}
       className={`ap-btn ${variant === "ghost" ? "ap-btn--ghost" : "ap-btn--secondary"} ap-btn--${size} ${className ?? ""}`}
-      aria-label={isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
-      title={isDark ? "Modo claro" : "Modo oscuro"}
+      aria-label={isDark ? t("themeToLight") : t("themeToDark")}
+      title={t("themeTitle")}
       type="button"
     >
       <span aria-hidden className="text-[14px] leading-none">

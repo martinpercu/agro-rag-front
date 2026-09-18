@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { MessageSquare, FlaskConical, ClipboardList, TestTube, Pin, Bell, Sprout, Menu, X, Satellite } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useIconSize } from "../hooks/use-icon-size";
@@ -29,6 +30,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pinCount = investigations.length;
   const alertCount = 0; // dummy hasta backend notifs
   const [pinnedIds, setPinnedIds] = useState<Set<string>>(new Set());
+  const t = useTranslations("Sidebar");
   function togglePin(id: string) {
     setPinnedIds((prev) => {
       const next = new Set(prev);
@@ -47,11 +49,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setRightOpen(true);
   }
 
+  // Cerrar sheet mobile con Escape
+  useEffect(() => {
+    if (!mobileOpen) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setMobileOpen(false);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [mobileOpen]);
+
   const SidebarContent = (
     <>
       <div className="sidebar-top">
         <Link href="/" className="sidebar-logo flex items-center gap-2" onClick={() => setMobileOpen(false)}>
-          <span className="sidebar-logo-mark flex items-center justify-center rounded-lg bg-brand text-white w-7 h-7">
+          <span className="sidebar-logo-mark flex items-center justify-center rounded-lg bg-brand text-[var(--text-on-brand)] w-7 h-7">
             <Sprout size={16} strokeWidth={1.7} />
           </span>
           Agroposta
@@ -59,29 +71,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <span className="sidebar-edition">2026/05</span>
       </div>
 
-      <nav className="sidebar-nav">
+      <nav className="sidebar-nav" aria-label={t("chat")}>
         <Link href="/" className={`sidebar-link ${pathname === "/" ? "active" : ""}`} onClick={() => setMobileOpen(false)}>
           <span className="sidebar-link-icon flex items-center justify-center">
             <MessageSquare size={iconBtn} strokeWidth={1.5} />
           </span>{" "}
-          Chat
+          {t("chat")}
         </Link>
         <Link href="/campo" className={`sidebar-link ${pathname === "/campo" ? "active" : ""}`} onClick={() => setMobileOpen(false)}>
           <span className="sidebar-link-icon flex items-center justify-center">
             <Satellite size={iconBtn} strokeWidth={1.5} />
           </span>{" "}
-          Mi campo
+          {t("campo")}
         </Link>
         <div className="sidebar-section">
           <div className="sidebar-section-title">
             <span className="sidebar-link-icon flex items-center justify-center">
               <FlaskConical size={14} strokeWidth={1.5} />
             </span>{" "}
-            Mis investigadas
+            {t("misInvestigadas")}
             <span className="sidebar-badge">{investigationsLoading ? "…" : investigations.length}</span>
           </div>
           {investigations.length === 0 ? (
-            <div className="sidebar-empty">Aún no hay. Hacé una pregunta y se guarda sutil.</div>
+            <div className="sidebar-empty">{t("aunNoHay")}</div>
           ) : (
             <div className="sidebar-investigations">
               {investigations.slice(0, 5).map((inv) => (
@@ -93,8 +105,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         e.stopPropagation();
                         togglePin(inv.id);
                       }}
-                      className={`ap-btn ap-btn--ghost p-0 h-6 w-6 shrink-0 ${pinnedIds.has(inv.id) ? "text-brand bg-brand-subtle" : "opacity-40 hover:opacity-100"}`}
-                      title={pinnedIds.has(inv.id) ? "Despinnear" : "Pinnear"}
+                      aria-pressed={pinnedIds.has(inv.id)}
+                      aria-label={pinnedIds.has(inv.id) ? t("unpin") : t("pin")}
+                      title={pinnedIds.has(inv.id) ? t("unpin") : t("pin")}
+                      className={`ap-btn ap-btn--ghost p-0 h-8 w-8 shrink-0 ${pinnedIds.has(inv.id) ? "text-brand bg-brand-subtle" : "opacity-40 hover:opacity-100"}`}
                     >
                       <Pin size={12} className={pinnedIds.has(inv.id) ? "fill-current" : ""} />
                     </button>
@@ -115,18 +129,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           )}
         </div>
-        <a className="sidebar-link muted" title="Próximamente — Fase 2">
+        <span className="sidebar-link muted" aria-disabled="true" title={t("pronto")}>
           <span className="sidebar-link-icon flex items-center justify-center">
             <ClipboardList size={iconBtn} strokeWidth={1.5} />
           </span>{" "}
-          Mis planes
-          <span className="sidebar-badge">pronto</span>
-        </a>
+          {t("misPlanes")}
+          <span className="sidebar-badge">{t("pronto")}</span>
+        </span>
         <Link href="/dev" className={`sidebar-link ${pathname === "/dev" ? "active" : ""}`} onClick={() => setMobileOpen(false)}>
           <span className="sidebar-link-icon flex items-center justify-center">
             <TestTube size={iconBtn} strokeWidth={1.5} />
           </span>{" "}
-          Lab /dev
+          {t("lab")}
           <span className="sidebar-badge lab">lab</span>
         </Link>
       </nav>
@@ -139,18 +153,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {userEmail}
               </span>
               <button className="sidebar-btn" onClick={signOut}>
-                Salir
+                {t("salir")}
               </button>
             </div>
           ) : (
             <Link href="/login" className="sidebar-btn primary" onClick={() => setMobileOpen(false)}>
-              Entrar
+              {t("entrar")}
             </Link>
           )
         ) : (
-          <span className="sidebar-hint">Supabase no configurado</span>
+          <span className="sidebar-hint">{t("supabaseNoConfig")}</span>
         )}
-        <div className="sidebar-footnote">Baseline only en prod · k/temp desde /dev</div>
+        <div className="sidebar-footnote">{t("baselineOnly")}</div>
       </div>
     </>
   );
@@ -164,13 +178,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="lg:hidden fixed top-0 left-0 right-0 z-30 flex items-center gap-2 px-3 py-2 bg-surface border-b border-border">
         <button
           onClick={() => setMobileOpen(true)}
-          className="ap-btn ap-btn--ghost ap-btn--sm"
-          aria-label="Abrir menú"
+          className="ap-btn ap-btn--ghost ap-btn--md"
+          aria-label={t("menuOpen")}
         >
           <Menu size={18} />
         </button>
         <Link href="/" className="flex items-center gap-2 font-semibold text-fg">
-          <span className="flex items-center justify-center rounded-lg bg-brand text-white w-7 h-7">
+          <span className="flex items-center justify-center rounded-lg bg-brand text-[var(--text-on-brand)] w-7 h-7">
             <Sprout size={16} strokeWidth={1.7} />
           </span>
           Agroposta
@@ -194,10 +208,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               animate={{ x: 0 }}
               exit={{ x: -320 }}
               transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              role="dialog"
+              aria-modal="true"
+              aria-label={t("menuOpen")}
               className="fixed inset-y-0 left-0 z-50 w-[280px] bg-surface border-r border-border flex flex-col p-4 overflow-y-auto lg:hidden"
             >
               <div className="flex justify-end mb-2">
-                <button onClick={() => setMobileOpen(false)} className="ap-btn ap-btn--ghost ap-btn--sm" aria-label="Cerrar">
+                <button onClick={() => setMobileOpen(false)} className="ap-btn ap-btn--ghost ap-btn--md" aria-label={t("menuClose")}>
                   <X size={16} />
                 </button>
               </div>
@@ -220,26 +237,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="right-icons">
           <button
             className={`right-icon-btn relative ${rightTab === "pins" && rightOpen ? "bg-brand-subtle border-brand text-brand" : ""}`}
-            title={rightOpen && rightTab === "pins" ? "Cerrar panel" : "Pins"}
+            title={rightOpen && rightTab === "pins" ? t("closePanel") : t("pins")}
             onClick={() => (rightOpen && rightTab === "pins" ? setRightOpen(false) : openPins())}
-            aria-label="Pins"
+            aria-label={t("pins")}
+            aria-expanded={rightOpen && rightTab === "pins"}
           >
             <Pin size={18} strokeWidth={1.5} />
             {pinCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[9px] font-bold leading-none text-white">
+              <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-bold leading-none text-[var(--text-on-brand)]">
                 {pinCount > 9 ? "9+" : pinCount}
               </span>
             )}
           </button>
           <button
             className={`right-icon-btn relative ${rightTab === "alerts" && rightOpen ? "bg-brand-subtle border-brand text-brand" : ""}`}
-            title={rightOpen && rightTab === "alerts" ? "Cerrar panel" : "Notificaciones"}
+            title={rightOpen && rightTab === "alerts" ? t("closePanel") : t("alerts")}
             onClick={() => (rightOpen && rightTab === "alerts" ? setRightOpen(false) : openAlerts())}
-            aria-label="Notificaciones"
+            aria-label={t("alerts")}
+            aria-expanded={rightOpen && rightTab === "alerts"}
           >
             <Bell size={18} strokeWidth={1.5} />
             {alertCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-error px-1 text-[9px] font-bold leading-none text-white">
+              <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-error px-1 text-[10px] font-bold leading-none text-[var(--text-on-brand)]">
                 {alertCount}
               </span>
             )}
@@ -256,22 +275,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               className="right-panel-content flex flex-col flex-1 min-h-0"
             >
               <div className="right-panel-header flex items-center justify-between gap-2">
-                <div className="flex gap-1">
+                <div className="flex gap-1" role="group" aria-label={t("pins")}>
                   <button
                     onClick={() => setRightTab("pins")}
-                    className={`ap-btn ap-btn--sm ${rightTab === "pins" ? "ap-btn--secondary" : "ap-btn--ghost"}`}
+                    aria-pressed={rightTab === "pins"}
+                    className={`ap-btn ap-btn--md ${rightTab === "pins" ? "ap-btn--secondary" : "ap-btn--ghost"}`}
                   >
-                    <Pin size={14} /> Pins
-                    {pinCount > 0 && <span className="ap-badge ap-badge--sm bg-brand text-white ml-1">{pinCount}</span>}
+                    <Pin size={14} /> {t("pins")}
+                    {pinCount > 0 && <span className="ap-badge ap-badge--sm bg-brand text-[var(--text-on-brand)] ml-1">{pinCount}</span>}
                   </button>
                   <button
                     onClick={() => setRightTab("alerts")}
-                    className={`ap-btn ap-btn--sm ${rightTab === "alerts" ? "ap-btn--secondary" : "ap-btn--ghost"}`}
+                    aria-pressed={rightTab === "alerts"}
+                    className={`ap-btn ap-btn--md ${rightTab === "alerts" ? "ap-btn--secondary" : "ap-btn--ghost"}`}
                   >
-                    <Bell size={14} /> Alertas
+                    <Bell size={14} /> {t("alerts")}
                   </button>
                 </div>
-                <button className="right-close ap-btn ap-btn--ghost ap-btn--sm" onClick={() => setRightOpen(false)}>
+                <button className="right-close ap-btn ap-btn--ghost ap-btn--md" onClick={() => setRightOpen(false)} aria-label={t("closePanel")}>
                   <X size={14} />
                 </button>
               </div>
@@ -280,12 +301,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {rightTab === "pins" ? (
                   investigations.length === 0 ? (
                     <div className="right-panel-empty">
-                      Aún no hay pins. Cuando guardes una investigada aparecerá acá.
-                      <br />
-                      <br />
-                      <span className="text-small text-muted">
-                        Fase 0: se guarda sutil con precio/ubicación opcional.
-                      </span>
+                      {t("pinsEmpty")}
                     </div>
                   ) : (
                     <div className="right-panel-list">
@@ -295,8 +311,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         <div className="right-panel-item-query flex-1 min-w-0">{inv.query || "(sin query)"}</div>
                         <button
                           onClick={() => togglePin(inv.id)}
-                          className={`ap-btn ap-btn--ghost p-0 h-6 w-6 shrink-0 ${pinnedIds.has(inv.id) ? "text-brand bg-brand-subtle" : "opacity-40 hover:opacity-100"}`}
-                          title={pinnedIds.has(inv.id) ? "Despinnear" : "Pinnear"}
+                          aria-pressed={pinnedIds.has(inv.id)}
+                          aria-label={pinnedIds.has(inv.id) ? t("unpin") : t("pin")}
+                          title={pinnedIds.has(inv.id) ? t("unpin") : t("pin")}
+                          className={`ap-btn ap-btn--ghost p-0 h-8 w-8 shrink-0 ${pinnedIds.has(inv.id) ? "text-brand bg-brand-subtle" : "opacity-40 hover:opacity-100"}`}
                         >
                           <Pin size={12} className={pinnedIds.has(inv.id) ? "fill-current" : ""} />
                         </button>
@@ -316,13 +334,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 ) : (
                   <div className="p-3 flex flex-col gap-3">
                     <div className="ap-log__empty text-small">
-                      No hay alertas. Próximamente: volatilidad, precios, recordatorios.
+                      {t("alertsEmpty")}
                     </div>
                     <div className="ap-card p-3">
-                      <div className="text-small font-semibold">Márgenes — vista previa</div>
-                      <div className="text-micro text-muted mt-1">Soja vs maíz 2026/05 (demo)</div>
+                      <div className="text-small font-semibold">{t("chartTitle")}</div>
+                      <div className="text-micro text-muted mt-1">{t("chartSub")}</div>
                       <div className="mt-2 h-20 rounded bg-brand-subtle border border-subtle flex items-center justify-center text-small text-muted">
-                        Chart placeholder — recharts P2
+                        {t("chartSoon")}
                       </div>
                     </div>
                   </div>

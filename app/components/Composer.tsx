@@ -56,6 +56,7 @@ export function Composer({
           rows={2}
           value={value}
           placeholder={placeholder ?? t("askPlaceholder")}
+          aria-label={t("composerLabel")}
           onChange={(e) => {
             setValue(e.target.value);
             adjustHeight(e.target as HTMLTextAreaElement);
