@@ -36,6 +36,7 @@ export default function DashboardPage() {
   const hydratedRef = useRef(false);
   const messagesRef = useRef<ChatMessage[]>([]);
   const tChat = useTranslations("Chat");
+  const tSidebar = useTranslations("Sidebar");
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
@@ -163,10 +164,9 @@ export default function DashboardPage() {
       });
 
       if (!res.ok || !res.body) {
-        const errText = lang === "en" ? "Connection error" : "Error de conexión";
         setMessages((prev) =>
           prev.map((m) =>
-            m.id === assistantId ? { ...m, streaming: false, error: errText, content: "" } : m
+            m.id === assistantId ? { ...m, streaming: false, error: tChat("errorConnection"), content: "" } : m
           )
         );
         busyRef.current = false;
@@ -236,7 +236,7 @@ export default function DashboardPage() {
                   )
                 );
               } else if (currentEvent === "strategy_error") {
-                const err = payload.error || "Error desconocido";
+                const err = payload.error || tChat("errorUnknown");
                 setMessages((prev) =>
                   prev.map((m) =>
                     m.id === assistantId ? { ...m, content: "", error: err, streaming: false } : m
@@ -293,7 +293,7 @@ export default function DashboardPage() {
       if (!isAbort) {
         setMessages((prev) =>
           prev.map((m) =>
-            m.id === assistantId ? { ...m, streaming: false, error: msg || "Network error", content: "" } : m
+            m.id === assistantId ? { ...m, streaming: false, error: msg || tChat("errorConnection"), content: "" } : m
           )
         );
       }
@@ -308,29 +308,36 @@ export default function DashboardPage() {
       <div className="dashboard-chat-header">
         <div className="chat-header-left">
           <h1 className="chat-title">{tChat("title")}</h1>
-          <span className="chat-subtitle" suppressHydrationWarning>
-            {tChat("subtitle")} · k={k} T={temperature.toFixed(1)} · Sem{semBm25} Lex{lexBm25}
+          <span className="chat-subtitle">
+            {tChat("subtitle")}
             <a
               href="/dev"
-              className="ml-2 text-[11px] text-brand underline underline-offset-2 hover:text-brand-hover"
-              title="Editar k/temp en /dev"
+              className="ml-2 text-xs text-brand underline underline-offset-2 hover:text-brand-hover"
+              title={tChat("editInDev")}
             >
               {tChat("editInDev")}
             </a>
           </span>
         </div>
         <div className="chat-header-right">
-          <ThemeToggle variant="ghost" size="sm" />
-          <button className="ap-btn ap-btn--ghost ap-btn--sm lang-toggle" onClick={toggleLang} title="Cambiar idioma">
-            {lang === "es" ? "🇺🇸 EN" : "🇪🇸 ES"}
+          <ThemeToggle variant="ghost" size="md" />
+          <button
+            className="ap-btn ap-btn--ghost ap-btn--md lang-toggle"
+            onClick={toggleLang}
+            aria-pressed={lang === "en"}
+            title={tSidebar("langToggle")}
+          >
+            {lang === "es" ? "EN" : "ES"}
           </button>
-          <button className="ap-btn ap-btn--secondary ap-btn--sm download-btn" onClick={clearChat} disabled={busy || messages.length === 0}>
-            {tChat("clear")}
-          </button>
+          {messages.length > 0 && (
+            <button className="ap-btn ap-btn--secondary ap-btn--md download-btn" onClick={clearChat} disabled={busy}>
+              {tChat("clear")}
+            </button>
+          )}
         </div>
       </div>
 
-      <MessageList messages={messages} lang={lang} />
+      <MessageList messages={messages} lang={lang} onExample={send} />
 
       <Composer onSend={send} disabled={busy} lang={lang} />
     </div>

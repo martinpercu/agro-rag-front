@@ -37,7 +37,13 @@
     "baselineOnly": "Solo baseline en prod · k/temp heredados de /dev · ubicación opcional",
     "baselineOnlyEn": "Baseline only in prod · k/temp inherited from /dev · no location required",
     "askPlaceholder": "Preguntá sobre Márgenes Agropecuarios… (Shift+Enter para salto)",
-    "askPlaceholderEn": "Ask about Margenes Agropecuarios… (Shift+Enter for newline)"
+    "askPlaceholderEn": "Ask about Margenes Agropecuarios… (Shift+Enter for newline)",
+    "composerLabel": "Escribí tu pregunta",
+    "composerLabelEn": "Write your question",
+    "errorConnection": "Error de conexión. Revisá tu red e intentá de nuevo.",
+    "errorConnectionEn": "Connection error. Check your network and try again.",
+    "errorUnknown": "Error desconocido",
+    "errorUnknownEn": "Unknown error"
   },
   "MessageList": {
     "what": "¿Qué querés investigar?",
@@ -173,6 +179,7 @@
   },
   "Sidebar": {
     "chat": "Chat",
+    "campo": "Mi campo",
     "misInvestigadas": "Mis investigadas",
     "misPlanes": "Mis planes",
     "lab": "Lab /dev",
@@ -181,6 +188,22 @@
     "aunNoHay": "Aún no hay. Hacé una pregunta y se guarda sutil.",
     "supabaseNoConfig": "Supabase no configurado",
     "salir": "Salir",
-    "entrar": "Entrar"
+    "entrar": "Entrar",
+    "menuOpen": "Abrir menú",
+    "menuClose": "Cerrar menú",
+    "pin": "Pinnear",
+    "unpin": "Despinnear",
+    "pins": "Pins",
+    "alerts": "Alertas",
+    "closePanel": "Cerrar panel",
+    "pinsEmpty": "Aún no hay pins. Cuando guardes una investigada aparecerá acá.",
+    "alertsEmpty": "No hay alertas. Próximamente: volatilidad, precios, recordatorios.",
+    "chartTitle": "Márgenes — vista previa",
+    "chartSub": "Soja vs maíz 2026/05",
+    "chartSoon": "Gráfico disponible próximamente.",
+    "themeToDark": "Cambiar a modo oscuro",
+    "themeToLight": "Cambiar a modo claro",
+    "themeTitle": "Tema",
+    "langToggle": "Cambiar idioma"
   }
 }

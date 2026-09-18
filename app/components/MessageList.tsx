@@ -37,10 +37,12 @@ export function MessageList({
   messages,
   lang,
   emptyHint,
+  onExample,
 }: {
   messages: ChatMessage[];
   lang: "es" | "en";
   emptyHint?: string;
+  onExample?: (text: string) => void;
 }) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -48,19 +50,35 @@ export function MessageList({
 
   useEffect(() => {
     const isStreaming = messages.some((m) => m.streaming);
-    bottomRef.current?.scrollIntoView({ behavior: isStreaming ? "auto" : "smooth", block: "end" });
+    const reduceMotion =
+      typeof window !== "undefined" &&
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    bottomRef.current?.scrollIntoView({
+      behavior: reduceMotion || isStreaming ? "auto" : "smooth",
+      block: "end",
+    });
   }, [messages]);
 
   if (messages.length === 0) {
+    const examples = [t("example1"), t("example2"), t("example3")];
     return (
       <div className="message-list empty">
         <div className="ap-card empty-state p-6 text-center max-w-[520px] mx-auto">
           <div className="empty-title">{t("what")}</div>
           <div className="empty-subtitle">{t("subtitle")}</div>
           <div className="empty-examples flex flex-wrap gap-2 justify-center mt-3">
-            <span className="ap-badge ap-badge--neutral empty-chip">“margen maíz 80ha Pergamino”</span>
-            <span className="ap-badge ap-badge--neutral empty-chip">“¿qué variedad de soja rinde más en 2026/05?”</span>
-            <span className="ap-badge ap-badge--neutral empty-chip">“coste gasoil por ha”</span>
+            {examples.map((ex) => (
+              <button
+                key={ex}
+                type="button"
+                className="ap-badge ap-badge--neutral empty-chip"
+                onClick={() => onExample?.(ex)}
+                disabled={!onExample}
+              >
+                “{ex}”
+              </button>
+            ))}
           </div>
           {emptyHint && <div className="empty-hint">{emptyHint}</div>}
         </div>
@@ -82,7 +100,7 @@ export function MessageList({
                 transition={{ duration: 0.15, ease: "easeOut" }}
                 className="bubble-row assistant"
               >
-                <div className="ap-bubble ap-bubble--assistant is-error bubble assistant error">
+                <div className="ap-bubble ap-bubble--assistant is-error bubble assistant error" role="alert">
                   <div className="bubble-text text-error">{m.error}</div>
                 </div>
               </motion.div>

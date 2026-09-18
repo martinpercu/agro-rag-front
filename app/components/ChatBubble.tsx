@@ -39,6 +39,7 @@ export function ChatBubble({
   lang?: "es" | "en";
 }) {
   const isUser = role === "user";
+  const tChat = useTranslations("Chat");
 
   if (isUser) {
     return (
@@ -52,11 +53,18 @@ export function ChatBubble({
 
   return (
     <div className="bubble-row assistant">
-      <div className={`ap-bubble ap-bubble--assistant bubble assistant ${trace || sources ? "" : ""}`}>
+      <div
+        className={`ap-bubble ap-bubble--assistant bubble assistant ${trace || sources ? "" : ""}`}
+        {...(streaming ? { role: "status" } : {})}
+      >
         {intent && <span className="ap-badge--intent bubble-intent">{intent}</span>}
         <div className="bubble-text markdown-content">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
-          {streaming && <span className="cursor-blink">▌</span>}
+          {streaming && !content ? (
+            <span className="thinking-label">{tChat("thinking")}</span>
+          ) : (
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+          )}
+          {streaming && <span className="cursor-blink" aria-hidden="true">▌</span>}
         </div>
         {sources && sources.length > 0 && (
           <SourcesBlock sources={sources} lang={lang} />
