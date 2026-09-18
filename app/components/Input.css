@@ -108,6 +108,7 @@
 }
 .ap-composer__inner .ap-textarea {
   flex: 1;
+  min-width: 0;
   min-height: 44px;
   max-height: 120px;
   border-radius: var(--radius-lg);

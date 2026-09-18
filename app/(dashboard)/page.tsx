@@ -329,9 +329,11 @@ export default function DashboardPage() {
           >
             {lang === "es" ? "EN" : "ES"}
           </button>
-          <button className="ap-btn ap-btn--secondary ap-btn--md download-btn" onClick={clearChat} disabled={busy || messages.length === 0}>
-            {tChat("clear")}
-          </button>
+          {messages.length > 0 && (
+            <button className="ap-btn ap-btn--secondary ap-btn--md download-btn" onClick={clearChat} disabled={busy}>
+              {tChat("clear")}
+            </button>
+          )}
         </div>
       </div>
 

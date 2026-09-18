@@ -1868,56 +1868,13 @@ html, body {
   margin: 0 auto;
 }
 
-.dashboard-composer textarea {
-  flex: 1;
-  resize: none;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 11px 14px;
-  font-family: inherit;
-  font-size: 14px;
-  background: var(--bg);
-  box-shadow: var(--shadow-sm);
-  transition: border-color 0.2s, box-shadow 0.2s;
-  min-height: 48px;
-  max-height: 120px;
-}
-
-.dashboard-composer textarea:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(64, 145, 108, 0.12);
-  background: var(--bg-surface);
-}
-
-.dashboard-composer button {
-  background: var(--accent);
-  color: var(--text-on-brand);
-  border: none;
-  border-radius: 12px;
-  padding: 0 20px;
-  height: 44px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.15s;
-  flex-shrink: 0;
-}
-
-.dashboard-composer button:hover:not(:disabled) {
-  background: var(--accent-dark);
-}
-
-.dashboard-composer button:disabled {
-  background: var(--border);
-  cursor: not-allowed;
-}
+/* Composer dashboard — el contenido usa ap-* (Button/Input.css).
+   Sin reglas legacy sobre textarea/button: ganaban por especificidad
+   y rompían los tokens (botón de envío invisible en light). */
 
 .dashboard-composer-hint {
-  font-size: 10px;
-  color: var(--muted);
-  opacity: 0.6;
+  font-size: 11px;
+  color: var(--text-secondary);
   text-align: center;
   margin-top: 6px;
 }
@@ -2035,6 +1992,9 @@ html, body {
   }
   .dashboard-chat-header {
     padding: 12px 14px 10px;
+  }
+  .chat-subtitle {
+    white-space: normal;
   }
   .bubble {
     max-width: 88%;
