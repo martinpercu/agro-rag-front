@@ -1,8 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
-import { getAuthHeader } from "../../hooks/use-agro-session";
+import type { Feature, FeatureCollection, Position } from "geojson";
+import { getAuthHeader, useAgroSession } from "../../hooks/use-agro-session";
+import { useInvestigations } from "../../hooks/use-investigations";
+
+const FieldDrawMap = dynamic(() => import("../../components/FieldDrawMap"), {
+  ssr: false,
+  loading: () => <div className="text-sm opacity-60">…</div>,
+});
 
 type Bucket = {
   date_from: string;
@@ -30,10 +38,76 @@ function shortDate(iso: string): string {
   return (iso || "").slice(0, 10);
 }
 
+function num(v: unknown): number | null {
+  const n = typeof v === "string" ? Number(v) : (v as number);
+  return typeof n === "number" && Number.isFinite(n) ? n : null;
+}
+
+/** Convierte el `location` guardado de una investigada a Feature GeoJSON (o null si no es mapeable). */
+function locationToFeature(
+  loc: Record<string, unknown> | null | undefined,
+  props: Record<string, string>
+): Feature | null {
+  if (!loc || typeof loc !== "object") return null;
+  try {
+    if ("polygon" in loc && loc.polygon && typeof loc.polygon === "object") {
+      const g = loc.polygon as { type?: unknown; coordinates?: unknown };
+      if ((g.type === "Polygon" || g.type === "MultiPolygon") && Array.isArray(g.coordinates)) {
+        return { type: "Feature", properties: props, geometry: g as Feature["geometry"] };
+      }
+    }
+    if ("vertices" in loc && Array.isArray(loc.vertices)) {
+      const ring: Position[] = [];
+      for (const v of loc.vertices as Array<{ lat?: unknown; lng?: unknown }>) {
+        const la = num(v?.lat);
+        const ln = num(v?.lng);
+        if (la === null || ln === null) return null;
+        ring.push([ln, la]);
+      }
+      if (ring.length < 3) return null;
+      ring.push(ring[0]);
+      return { type: "Feature", properties: props, geometry: { type: "Polygon", coordinates: [ring] } };
+    }
+    if ("bbox" in loc && loc.bbox && typeof loc.bbox === "object") {
+      const b = loc.bbox as Record<string, unknown>;
+      const laMin = num(b.lat_min);
+      const laMax = num(b.lat_max);
+      const lnMin = num(b.lng_min);
+      const lnMax = num(b.lng_max);
+      if (laMin === null || laMax === null || lnMin === null || lnMax === null) return null;
+      return {
+        type: "Feature",
+        properties: props,
+        geometry: {
+          type: "Polygon",
+          coordinates: [[[lnMin, laMin], [lnMax, laMin], [lnMax, laMax], [lnMin, laMax], [lnMin, laMin]]],
+        },
+      };
+    }
+    const la = num((loc as Record<string, unknown>).lat);
+    const ln = num((loc as Record<string, unknown>).lng);
+    if (la !== null && ln !== null) {
+      // Punto + radio: círculo aproximado con 24 lados (r desde ha)
+      const ha = num((loc as Record<string, unknown>).ha) ?? 5;
+      const rM = Math.sqrt(Math.max(ha, 0.1) * 10000 / Math.PI);
+      const ring: Position[] = [];
+      for (let i = 0; i < 24; i++) {
+        const a = (i / 24) * 2 * Math.PI;
+        ring.push([ln + (rM * Math.cos(a)) / (111320 * Math.cos((la * Math.PI) / 180)), la + (rM * Math.sin(a)) / 111320]);
+      }
+      ring.push(ring[0]);
+      return { type: "Feature", properties: props, geometry: { type: "Polygon", coordinates: [ring] } };
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
 export default function CampoPage() {
   const t = useTranslations("Campo");
   const [lang, setLang] = useState<Lang>("es");
-  const [tab, setTab] = useState<"point" | "manual">("point");
+  const [tab, setTab] = useState<"point" | "manual" | "draw">("point");
   const [lat, setLat] = useState("-34.5");
   const [lng, setLng] = useState("-62.0");
   const [ha, setHa] = useState("5");
@@ -46,7 +120,22 @@ export default function CampoPage() {
   const [error, setError] = useState("");
   const [result, setResult] = useState<NdviResult | null>(null);
   const [lastLocation, setLastLocation] = useState<Record<string, unknown> | null>(null);
+  const [drawnPolygon, setDrawnPolygon] = useState<Record<string, unknown> | null>(null);
   const [saved, setSaved] = useState(false);
+  const { userEmail } = useAgroSession();
+  const { investigations } = useInvestigations(userEmail);
+
+  const savedFields: FeatureCollection = useMemo(() => {
+    const features: Feature[] = [];
+    for (const inv of investigations.slice(0, 20)) {
+      const f = locationToFeature(inv.location, {
+        title: inv.query || "(sin query)",
+        meta: `${inv.edition_id || "2026_05"} · ${inv.created_at ? inv.created_at.slice(0, 10) : ""}`,
+      });
+      if (f) features.push(f);
+    }
+    return { type: "FeatureCollection", features };
+  }, [investigations]);
 
   useEffect(() => {
     const stored = localStorage.getItem("agroposta_lang");
@@ -86,12 +175,12 @@ export default function CampoPage() {
     return { vertices };
   }
 
-  async function fetchNdvi() {
+  async function fetchNdvi(locationOverride?: Record<string, unknown>) {
     setLoading(true);
     setError("");
     setSaved(false);
     try {
-      const location = buildLocation();
+      const location = locationOverride ?? buildLocation();
       const res = await fetch("/api/proxy/satellite/ndvi", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -147,19 +236,39 @@ export default function CampoPage() {
       </div>
 
       <div className="max-w-[760px] mx-auto w-full px-4 pb-24 flex flex-col gap-4">
-        <div className="flex gap-2">
-          {(["point", "manual"] as const).map((m) => (
+        <div className="flex gap-2 flex-wrap">
+          {(["point", "manual", "draw"] as const).map((m) => (
             <button
               key={m}
               onClick={() => setTab(m)}
-              className={`ap-btn ${tab === m ? "" : "ap-btn--ghost"}`}
+              className={`ap-btn ap-btn--sm ${tab === m ? "" : "ap-btn--ghost"}`}
             >
-              {tx(m === "point" ? "tabPoint" : "tabManual")}
+              {tx(m === "point" ? "tabPoint" : m === "manual" ? "tabManual" : "tabDraw")}
             </button>
           ))}
         </div>
 
-        {tab === "point" ? (
+        {tab === "draw" ? (
+          <div className="flex flex-col gap-3">
+            <FieldDrawMap
+              center={[Number(lat) || -34.5, Number(lng) || -62.0]}
+              onPolygon={setDrawnPolygon}
+              saved={savedFields}
+              t={t}
+            />
+            <div>
+              <button
+                onClick={() => drawnPolygon && fetchNdvi({ polygon: drawnPolygon })}
+                disabled={loading || !drawnPolygon}
+                className="ap-btn ap-btn--primary ap-btn--sm"
+              >
+                {loading ? t("fetching") : t("drawUse")}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {tab === "point" ? (
           <div className="grid grid-cols-3 gap-3">
             <label className="flex flex-col gap-1 text-sm">
               {t("lat")}
@@ -207,6 +316,8 @@ export default function CampoPage() {
             </div>
           </div>
         )}
+          </>
+        )}
 
         <div className="grid grid-cols-3 gap-3">
           <label className="flex flex-col gap-1 text-sm">
@@ -227,7 +338,7 @@ export default function CampoPage() {
         </div>
 
         <div>
-          <button onClick={fetchNdvi} disabled={loading} className="ap-btn ap-btn--primary">
+          <button onClick={() => fetchNdvi()} disabled={loading} className="ap-btn ap-btn--primary ap-btn--sm">
             {loading ? t("fetching") : t("fetch")}
           </button>
         </div>
@@ -280,7 +391,7 @@ export default function CampoPage() {
               </tbody>
             </table>
             <div>
-              <button onClick={saveInvestigation} className="ap-btn">
+              <button onClick={saveInvestigation} className="ap-btn ap-btn--sm">
                 {t("save")}
               </button>
               {saved && <span className="ml-2 text-sm text-green-700 dark:text-green-400">✓ {t("saved")}</span>}

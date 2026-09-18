@@ -8,3 +8,8 @@ dist
 .env.local
 .env*.local
 *.tsbuildinfo
+
+# Playwright (artefactos, no los baselines de tests/)
+test-results/
+playwright-report/
+blob-report/

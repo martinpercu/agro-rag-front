@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { MessageSquare, FlaskConical, ClipboardList, TestTube, Pin, Bell, Sprout, Menu, X, Satellite } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useIconSize } from "../hooks/use-icon-size";
@@ -23,6 +24,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [mobileOpen, setMobileOpen] = useState(false);
   const { userEmail, isConfigured, signOut } = useAgroSession();
   const { investigations, loading: investigationsLoading } = useInvestigations(userEmail);
+  const pathname = usePathname();
   const iconBtn = useIconSize("button");
   const pinCount = investigations.length;
   const alertCount = 0; // dummy hasta backend notifs
@@ -58,13 +60,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
 
       <nav className="sidebar-nav">
-        <Link href="/" className="sidebar-link active" onClick={() => setMobileOpen(false)}>
+        <Link href="/" className={`sidebar-link ${pathname === "/" ? "active" : ""}`} onClick={() => setMobileOpen(false)}>
           <span className="sidebar-link-icon flex items-center justify-center">
             <MessageSquare size={iconBtn} strokeWidth={1.5} />
           </span>{" "}
           Chat
         </Link>
-        <Link href="/campo" className="sidebar-link" onClick={() => setMobileOpen(false)}>
+        <Link href="/campo" className={`sidebar-link ${pathname === "/campo" ? "active" : ""}`} onClick={() => setMobileOpen(false)}>
           <span className="sidebar-link-icon flex items-center justify-center">
             <Satellite size={iconBtn} strokeWidth={1.5} />
           </span>{" "}
@@ -120,7 +122,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           Mis planes
           <span className="sidebar-badge">pronto</span>
         </a>
-        <Link href="/dev" className="sidebar-link" onClick={() => setMobileOpen(false)}>
+        <Link href="/dev" className={`sidebar-link ${pathname === "/dev" ? "active" : ""}`} onClick={() => setMobileOpen(false)}>
           <span className="sidebar-link-icon flex items-center justify-center">
             <TestTube size={iconBtn} strokeWidth={1.5} />
           </span>{" "}

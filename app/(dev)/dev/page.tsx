@@ -326,7 +326,8 @@ export default function DevPage() {
         <div>
           <h1>{t("title")}</h1>
           <div className="subtitle">
-            {t("subtitle")} — <a href="/" className="text-brand underline underline-offset-2 hover:text-brand-hover">{t("irAlChat")}</a>
+            {t("subtitle")} — <a href="/" className="text-brand underline underline-offset-2 hover:text-brand-hover">{t("irAlChat")}</a>{" "}
+            · <a href="/dev/map" className="text-brand underline underline-offset-2 hover:text-brand-hover">mapa lab 🗺</a>
           </div>
         </div>
         <div className="flex items-center gap-2">
