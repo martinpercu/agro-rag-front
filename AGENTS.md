@@ -11,11 +11,16 @@ Base stack: Next.js 16.2.9 + React 19.2.7 + Tailwind v4 + TypeScript 5.9.3.
 
 **State 2026-09-04:** product Odoo layout `globals.css` with Oliva `#3A5A40` / Tranquera tokens, Inter + Roboto_Mono, dashboard 3 cols. Both `main` branches merged (`ddde9a6` back, `4740235` front). Langfuse separation `lab:compare_stream` vs `user:chat/user:compare_stream` done.
 
+**State 2026-09-15 (satellite, unmerged):** product page **Mi campo** `/campo` (Sentinel-2 NDVI: point+radius / manual-points / draw-on-map tabs + series table + save as investigation) on `feat/sat-ndvi-endpoint` → `feat/sat-field-map` (stacked; front `feat/sat-field-map` = current dev). New deps `leaflet` + `react-leaflet` (+ `@types/leaflet`). See Satellite section below.
+
 ## Key structure
 
 - `app/(dev)/dev/page.tsx`: lab `/dev` — 7 strategies (`baseline`, `lexical`, `hybrid`, `rerank`, `query_rewrite`, `multi_query`, `hyde`) with `StrategyCard` (streaming SSE). Open, no auth gate. `fetch("/api/proxy/compare/stream")` relative, traced as `lab:compare_stream` `session_id="lab"` `tags:["lab"]` (single lab user).
 - `app/(dashboard)/layout.tsx` + `app/(dashboard)/page.tsx`: product chat — layout 3 cols (left sidebar 280px | center chat max 760px | right panel thin collapsed 56px → 340px with pins), derived from Odoo `globals.css` (warm light/dark tokens + density `builder/client`). Right panel initial only 2 icons `pin` + `campana` (Odoo), no content until pins. Product chat `page.tsx:156` does `POST /api/proxy/compare/stream` with `enabled:["baseline"]` + `history` + `lang/k/temperature` + `Authorization: Bearer <supabase>` if logged, traced as `user:compare_stream` `session_id=tester` `tags:["user"]` (per Supabase user, streaming kept). Also calls `POST /api/proxy/plan/parse` after stream (`page.tsx:271`) to extract `divisions` and `POST /api/proxy/investigations` to save (both per user, `plan_parse` traced, `investigations` not traced).
 - `app/components/StrategyCard.tsx`: only in `/dev` — states `idle`/`retrieving`/`streaming`/`done`/`error` + trace.
+- `app/(dashboard)/campo/page.tsx`: **Mi campo** satellite page (client) — tabs point+radius (1–20 ha) / manual (vertices textarea or bbox) / draw; `POST /api/proxy/satellite/ndvi` + table (green→red dots, ☁ cloudy) + `POST /api/proxy/investigations` save with real `location` + `agroposta:investigation-saved` event for sidebar refresh. Strings in `messages/{es,en}.json` `Campo` namespace (tabs use `X`/`XEn` pattern like `Chat`).
+- `app/components/FieldDrawMap.tsx`: Leaflet draw map — click adds vertices (min 3), undo/clear/close, Esri WorldImagery default + OSM base + Esri `World_Boundaries_and_Places`/`World_Transportation` overlays on + `ScaleControl` (metric). `dynamic(..., {ssr:false})` import in page (Leaflet needs `window`); uses `CircleMarker` only (no marker image assets to break).
+- `app/(dashboard)/layout.tsx`: sidebar `Link href="/campo"` with `Satellite` lucide icon (after Chat).
 - `app/components/ChatBubble.tsx` / `MessageList.tsx` / `Composer.tsx`: product chat — human right / assistant left bubbles (Odoo style), collapsible sources.
 - `app/components/ComparePanel.tsx`: legacy 6 cards non-stream — keep as reference.
 - `app/globals.css`: Odoo `globals.css` base (tokens `:root`/`dark` + `@theme inline` + density), then adapted to field green Oliva/Tranquera. `DESIGN_GUIDELINES.md` / `../design-system/` as reference.
@@ -41,6 +46,13 @@ uv run uvicorn api.main:app --host 127.0.0.1 --port 8002 --app-dir src  # pineco
 tail -f /tmp/agro-front.log
 tail -f /tmp/agro-back.log
 ```
+
+## Satellite field page (/campo, 2026-09-15)
+
+- **Rewrite baked at build:** `next.config.js` resolves `BACKEND_URL` during `next build` (verified: dest IP lands in `.next/routes-manifest.json`). `next start` with a different `BACKEND_URL` will NOT re-point the proxy — rebuild to change target. Dev (`next dev`) reads env at boot.
+- **Dev HMR picks up new routes/branches without restart** (verified `/campo` 200 after branch switch), but a second `next dev` in the same dir refuses to start (lockfile) — use `next start -p <other>` with a matching build for parallel checks, never kill the user's `:3002` dev.
+- **`next-env.d.ts` churn:** builds flip its routes import between `.next/dev` and `.next/types` — revert, don't commit.
+- **Leaflet + Next 16:** always `dynamic(ssr:false)`; `leaflet/dist/leaflet.css` import inside the client component is enough (globals already `@import`s component css). Map `zIndex: 0` style so tiles stay under composer/sidebar layers.
 
 ## Conventions
 
