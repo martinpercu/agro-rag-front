@@ -145,42 +145,45 @@ export default function DashboardPage() {
 
     const authHeader = await getAuthHeader();
 
-    try {
-      const res = await fetch(`/api/proxy/compare/stream`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "text/event-stream", ...authHeader },
-        body: JSON.stringify({
-          question,
-          enabled: ["baseline"],
-          history: history.slice(-10),
-          lang,
-          k,
-          sem_bm25: semBm25,
-          lex_bm25: lexBm25,
-          temperature,
-        }),
-        // @ts-ignore Next.js fetch cache
-        cache: "no-store" as RequestCache,
-      });
+    // primario: grafo con streaming (POST /chat/stream, eventos chat_*)
+    // fallback: baseline del comparador si el backend no conoce /chat/stream (404)
+    let accAnswer = "";
+    let intent: string | undefined;
+    let sources: ChatMessage["sources"] = [];
+    let trace: ChatMessage["trace"] = [];
+    let divisions: Array<{ hectares: string; cultivo: string | null }> = [];
+    let planIntent = false;
 
-      if (!res.ok || !res.body) {
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === assistantId ? { ...m, streaming: false, error: tChat("errorConnection"), content: "" } : m
-          )
-        );
-        busyRef.current = false;
-        setBusy(false);
-        return;
+    function applyAssistant(patch: Partial<ChatMessage>) {
+      setMessages((prev) => prev.map((m) => (m.id === assistantId ? { ...m, ...patch } : m)));
+    }
+    function failAssistant(msg: string) {
+      applyAssistant({ streaming: false, error: msg, content: "" });
+    }
+
+    async function streamFrom(
+      url: string,
+      body: Record<string, unknown>,
+      onEvent: (event: string, payload: any) => void
+    ): Promise<"done" | "fallback" | "error"> {
+      let res: Response;
+      try {
+        res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "text/event-stream", ...authHeader },
+          body: JSON.stringify(body),
+          // @ts-ignore Next.js fetch cache
+          cache: "no-store" as RequestCache,
+        });
+      } catch {
+        return "error";
       }
+      if (res.status === 404) return "fallback";
+      if (!res.ok || !res.body) return "error";
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
-      let accAnswer = "";
-      let intent: string | undefined;
-      let sources: ChatMessage["sources"] = [];
-      let trace: ChatMessage["trace"] = [];
       let currentEvent = ""; // keep across chunks (split could separate event/data)
 
       while (true) {
@@ -197,55 +200,100 @@ export default function DashboardPage() {
             const data = line.slice(5).trim();
             if (!data) continue;
             try {
-              const payload = JSON.parse(data);
-              // dashboard only cares about baseline strategy events
-              const strat = payload.strategy as string | undefined;
-              if (strat && strat !== "baseline") continue;
-
-              if (currentEvent === "strategy_retrieve") {
-                intent = payload.intent;
-                sources = payload.sources || [];
-                trace = payload.trace || [];
-                setMessages((prev) =>
-                  prev.map((m) =>
-                    m.id === assistantId ? { ...m, intent, sources, trace, streaming: true } : m
-                  )
-                );
-              } else if (currentEvent === "strategy_token") {
-                accAnswer += payload.text || "";
-                setMessages((prev) =>
-                  prev.map((m) =>
-                    m.id === assistantId ? { ...m, content: accAnswer, streaming: true } : m
-                  )
-                );
-              } else if (currentEvent === "strategy_done") {
-                accAnswer = payload.answer || accAnswer;
-                sources = payload.sources || sources;
-                setMessages((prev) =>
-                  prev.map((m) =>
-                    m.id === assistantId
-                      ? {
-                          ...m,
-                          content: accAnswer,
-                          sources,
-                          trace,
-                          intent: intent || m.intent,
-                          streaming: false,
-                        }
-                      : m
-                  )
-                );
-              } else if (currentEvent === "strategy_error") {
-                const err = payload.error || tChat("errorUnknown");
-                setMessages((prev) =>
-                  prev.map((m) =>
-                    m.id === assistantId ? { ...m, content: "", error: err, streaming: false } : m
-                  )
-                );
-              }
+              onEvent(currentEvent, JSON.parse(data));
             } catch {}
           }
         }
+      }
+      return "done";
+    }
+
+    try {
+      const chatOutcome = await streamFrom(
+        `/api/proxy/chat/stream`,
+        {
+          question,
+          history: history.slice(-10),
+          lang,
+          k,
+          temperature,
+        },
+        (event, payload) => {
+          if (event === "chat_meta") {
+            intent = payload.intent;
+            sources = payload.sources || [];
+            divisions = payload.divisions || [];
+            planIntent = !!payload.plan_intent;
+            applyAssistant({ intent, sources, streaming: true });
+          } else if (event === "chat_token") {
+            accAnswer += payload.text || "";
+            applyAssistant({ content: accAnswer, streaming: true });
+          } else if (event === "chat_done") {
+            accAnswer = payload.answer || accAnswer;
+            sources = payload.sources || sources;
+            divisions = payload.divisions || divisions;
+            if (payload.plan_intent !== undefined) planIntent = !!payload.plan_intent;
+            if (payload.intent) intent = payload.intent;
+            applyAssistant({ content: accAnswer, sources, intent, streaming: false });
+          } else if (event === "chat_error") {
+            failAssistant(payload.error || tChat("errorUnknown"));
+          }
+        }
+      );
+
+      if (chatOutcome === "fallback") {
+        // backend viejo: reintenta con baseline del comparador (eventos strategy_*)
+        accAnswer = "";
+        intent = undefined;
+        sources = [];
+        trace = [];
+        divisions = [];
+        planIntent = false;
+        const fbOutcome = await streamFrom(
+          `/api/proxy/compare/stream`,
+          {
+            question,
+            enabled: ["baseline"],
+            history: history.slice(-10),
+            lang,
+            k,
+            sem_bm25: semBm25,
+            lex_bm25: lexBm25,
+            temperature,
+          },
+          (event, payload) => {
+            // dashboard only cares about baseline strategy events
+            const strat = payload.strategy as string | undefined;
+            if (strat && strat !== "baseline") return;
+
+            if (event === "strategy_retrieve") {
+              intent = payload.intent;
+              sources = payload.sources || [];
+              trace = payload.trace || [];
+              applyAssistant({ intent, sources, trace, streaming: true });
+            } else if (event === "strategy_token") {
+              accAnswer += payload.text || "";
+              applyAssistant({ content: accAnswer, streaming: true });
+            } else if (event === "strategy_done") {
+              accAnswer = payload.answer || accAnswer;
+              sources = payload.sources || sources;
+              applyAssistant({ content: accAnswer, sources, trace, intent, streaming: false });
+            } else if (event === "strategy_error") {
+              failAssistant(payload.error || tChat("errorUnknown"));
+            }
+          }
+        );
+        if (fbOutcome !== "done") {
+          failAssistant(tChat("errorConnection"));
+          busyRef.current = false;
+          setBusy(false);
+          return;
+        }
+      } else if (chatOutcome === "error") {
+        failAssistant(tChat("errorConnection"));
+        busyRef.current = false;
+        setBusy(false);
+        return;
       }
 
       // finalize if still streaming (no done event but tokens ended)
@@ -253,24 +301,25 @@ export default function DashboardPage() {
         prev.map((m) => (m.id === assistantId ? { ...m, streaming: false } : m))
       );
 
-      // Save investigacion sutil (Fase 2 baby step1: con divisions si el user mencionó ha/cultivo)
+      // Save investigacion sutil (divisions/planIntent ya vienen del grafo en chat_meta;
+      // si vinieron vacios — fallback baseline — se parsean via /plan/parse como antes)
       if (accAnswer && !accAnswer.startsWith("En esta edicion no encontre")) {
         try {
-          // Parsear divisions via backend (mismo parser que field_collector) — no bloquea si falla
-          let divisions: Array<{ hectares: string; cultivo: string | null }> = [];
-          let planIntent = false;
-          try {
-            const parseRes = await fetch("/api/proxy/plan/parse", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ question, history: history.slice(-6) }),
-            });
-            if (parseRes.ok) {
-              const pj = await parseRes.json();
-              divisions = pj.divisions || [];
-              planIntent = !!pj.plan_intent;
-            }
-          } catch {}
+          if (!divisions.length && !planIntent) {
+            // Parsear divisions via backend (mismo parser que field_collector) — no bloquea si falla
+            try {
+              const parseRes = await fetch("/api/proxy/plan/parse", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ question, history: history.slice(-6) }),
+              });
+              if (parseRes.ok) {
+                const pj = await parseRes.json();
+                divisions = pj.divisions || [];
+                planIntent = !!pj.plan_intent;
+              }
+            } catch {}
+          }
           const saveAuthHeader = await getAuthHeader();
           await fetch("/api/proxy/investigations", {
             method: "POST",
