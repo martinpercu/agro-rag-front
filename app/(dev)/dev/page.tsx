@@ -71,6 +71,7 @@ export default function DevPage() {
 
   const busyRef = useRef(false);
   const t = useTranslations("Lab");
+  const tSide = useTranslations("Sidebar");
   const hydratedRef = useRef(false);
 
   // Hydrate from localStorage after mount (avoids SSR mismatch)
@@ -327,7 +328,7 @@ export default function DevPage() {
           <h1>{t("title")}</h1>
           <div className="subtitle">
             {t("subtitle")} — <a href="/" className="text-brand underline underline-offset-2 hover:text-brand-hover">{t("irAlChat")}</a>{" "}
-            · <a href="/dev/map" className="text-brand underline underline-offset-2 hover:text-brand-hover">mapa lab 🗺</a>
+            · <a href="/dev/map" className="text-brand underline underline-offset-2 hover:text-brand-hover">{t("mapLab")}</a>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -339,18 +340,23 @@ export default function DevPage() {
                   className="ap-btn ap-btn--ghost ap-btn--sm lang-toggle"
                   onClick={signOut}
                 >
-                  Salir
+                  {tSide("salir")}
                 </button>
               </>
             ) : (
               <a href="/login" className="ap-btn ap-btn--ghost ap-btn--sm lang-toggle no-underline">
-                Entrar
+                {tSide("entrar")}
               </a>
             )
           ) : null}
-          <ThemeToggle variant="ghost" size="sm" />
-          <button className="ap-btn ap-btn--ghost ap-btn--sm lang-toggle" onClick={toggleLang}>
-            {lang === "es" ? "🇺🇸 EN" : "🇪🇸 ES"}
+          <ThemeToggle variant="ghost" size="md" />
+          <button
+            className="ap-btn ap-btn--ghost ap-btn--md lang-toggle"
+            onClick={toggleLang}
+            aria-pressed={lang === "en"}
+            title={tSide("langToggle")}
+          >
+            {lang === "es" ? "EN" : "ES"}
           </button>
           <button className="ap-btn ap-btn--secondary ap-btn--sm download-btn" onClick={clearHistories} disabled={busy}>
             {t("limpiar")}

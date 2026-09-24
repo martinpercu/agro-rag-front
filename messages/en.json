@@ -10,7 +10,8 @@
     "errorRed": "Network error",
     "kMin": "Maximum precision",
     "kMax": "Maximum coverage",
-    "irAlChat": "go to product chat →"
+    "irAlChat": "go to product chat →",
+    "mapLab": "lab map 🗺"
   },
   "StrategyCard": {
     "esperando": "Waiting for a question...",
