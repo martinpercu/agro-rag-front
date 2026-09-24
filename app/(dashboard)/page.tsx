@@ -23,6 +23,10 @@ function readStoredNumber(key: string, fallback: number, min: number, max: numbe
   return n;
 }
 
+// Prefijos de "no encontré" del backend (answerer.py NO_ANSWER_ES/EN).
+// Deben matchear exacto: si cambian allá, cambiar acá en la misma rama.
+const NO_ANSWER_PREFIXES = ["En esta edicion no encontre", "I didn't find"];
+
 export default function DashboardPage() {
   const [lang, setLang] = useState<Lang>("es");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -303,7 +307,7 @@ export default function DashboardPage() {
 
       // Save investigacion sutil (divisions/planIntent ya vienen del grafo en chat_meta;
       // si vinieron vacios — fallback baseline — se parsean via /plan/parse como antes)
-      if (accAnswer && !accAnswer.startsWith("En esta edicion no encontre")) {
+      if (accAnswer && !NO_ANSWER_PREFIXES.some((p) => accAnswer.startsWith(p))) {
         try {
           if (!divisions.length && !planIntent) {
             // Parsear divisions via backend (mismo parser que field_collector) — no bloquea si falla
